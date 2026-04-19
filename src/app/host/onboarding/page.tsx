@@ -2,108 +2,214 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Header, Footer } from '@/components/layout';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button, Input, Select, Card, Textarea } from '@/components/ui';
-import { AuthService } from '@/services/auth.service';
-import { CheckCircle, Car, Shield, Clock, Star } from 'lucide-react';
+import { Card, Button, Input } from '@/components/ui';
+import { HostService } from '@/services/auth.service';
+import { auth } from '@/lib/firebase';
+import {
+  Car, MapPin, Trophy, Sparkles, CheckCircle,
+  Shield, Clock, Star, Users, Award, ChevronRight
+} from 'lucide-react';
 
-const hostSchema = z.object({
-  displayName: z.string().min(2, 'Name must be at least 2 characters'),
-  phone: z.string().min(10, 'Please enter a valid phone number'),
-  city: z.string().min(1, 'Please select a city'),
-  address: z.string().min(10, 'Please enter your full address'),
-  idType: z.string().min(1, 'Please select ID type'),
-  idNumber: z.string().min(1, 'Please enter ID number'),
-});
+type HostType = 'vehicle' | 'guide' | 'tournament' | 'experience';
 
-type HostFormData = z.infer<typeof hostSchema>;
+interface HostTypeInfo {
+  id: HostType;
+  title: string;
+  description: string;
+  icon: typeof Car;
+  color: string;
+  benefits: string[];
+}
+
+const HOST_TYPES: HostTypeInfo[] = [
+  {
+    id: 'vehicle',
+    title: 'Vehicle Host',
+    description: 'List your auto-rickshaw, bike, or scooter and earn by renting it out',
+    icon: Car,
+    color: 'from-blue-500 to-blue-600',
+    benefits: [
+      'Set your own prices',
+      'Insurance coverage included',
+      '24/7 support',
+      'Secure payments',
+    ],
+  },
+  {
+    id: 'guide',
+    title: 'Local Guide',
+    description: 'Share your local knowledge and show travelers hidden gems',
+    icon: MapPin,
+    color: 'from-green-500 to-green-600',
+    benefits: [
+      'Flexible schedule',
+      'Showcase your city',
+      'Extra income',
+      'Build reputation',
+    ],
+  },
+  {
+    id: 'tournament',
+    title: 'Tournament Host',
+    description: 'Organize exciting competitions and prize pools',
+    icon: Trophy,
+    color: 'from-purple-500 to-purple-600',
+    benefits: [
+      'Create prize pools',
+      'Sponsor partnerships',
+      'Event management',
+      'Earn commissions',
+    ],
+  },
+  {
+    id: 'experience',
+    title: 'Experience Host',
+    description: 'Offer unique activities and experiences to travelers',
+    icon: Sparkles,
+    color: 'from-orange-500 to-orange-600',
+    benefits: [
+      'Share your passion',
+      'Curate unique tours',
+      'Local partnerships',
+      'Flexible hosting',
+    ],
+  },
+];
+
+const CITIES = [
+  'Goa', 'Jaipur', 'Delhi', 'Mumbai', 'Bangalore', 'Udaipur',
+  'Varanasi', 'Agra', 'Kerala', 'Rishikesh', 'Manali', 'Shimla'
+];
+
+const LANGUAGES = [
+  'English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Malayalam',
+  'Marathi', 'Bengali', 'Gujarati', 'Punjabi', 'Portuguese', 'Spanish'
+];
+
+const VEHICLE_TYPES = [
+  'Auto Rickshaw', 'Motorcycle', 'Scooter', 'Bicycle', 'EV Scooter', 'Van'
+];
+
+const EXPERIENCE_CATEGORIES = [
+  'Cultural Tours', 'Food & Drink', 'Adventure', 'Sightseeing',
+  'Nightlife', 'Wellness', 'Art & Crafts', 'Nature & Wildlife'
+];
+
+const SPECIALTIES = [
+  'Racing Events', 'City Tours', 'Beach Parties', 'Heritage Walks',
+  'Food Tours', 'Adventure Sports', 'Music Events', 'Sports Tournaments'
+];
 
 export default function HostOnboardingPage() {
   const router = useRouter();
-  const { user, upgradeToHost, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const [step, setStep] = useState<'select-type' | 'vehicle' | 'guide' | 'tournament' | 'experience'>('select-type');
   const [isLoading, setIsLoading] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    trigger,
-  } = useForm<HostFormData>({
-    resolver: zodResolver(hostSchema),
+  // Form states
+  const [vehicleData, setVehicleData] = useState({
+    displayName: user?.displayName || '',
+    phone: '',
+    licenseNumber: '',
+    vehicleTypes: [] as string[],
+    serviceAreas: [] as string[],
+    description: '',
   });
 
-  const steps = [
-    { number: 1, title: 'Personal Info', icon: CheckCircle },
-    { number: 2, title: 'Location', icon: CheckCircle },
-    { number: 3, title: 'Verification', icon: CheckCircle },
-    { number: 4, title: 'Review', icon: CheckCircle },
-  ];
+  const [guideData, setGuideData] = useState({
+    displayName: user?.displayName || '',
+    phone: '',
+    city: '',
+    languages: [] as string[],
+    categories: [] as string[],
+    bio: '',
+    experience: '',
+    hourlyRate: 500,
+  });
 
-  const nextStep = async () => {
-    let valid = true;
-    if (currentStep === 1) {
-      valid = await trigger(['displayName', 'phone']);
-    } else if (currentStep === 2) {
-      valid = await trigger(['city', 'address']);
-    } else if (currentStep === 3) {
-      valid = await trigger(['idType', 'idNumber']);
-    }
-    if (valid && currentStep < 4) {
-      setCurrentStep(currentStep + 1);
-    }
+  const [tournamentData, setTournamentData] = useState({
+    displayName: user?.displayName || '',
+    phone: '',
+    experience: '',
+    specialties: [] as string[],
+    certifications: [] as string[],
+    description: '',
+  });
+
+  const [experienceData, setExperienceData] = useState({
+    displayName: user?.displayName || '',
+    phone: '',
+    categories: [] as string[],
+    description: '',
+    experienceTypes: [] as string[],
+  });
+
+  const handleTypeSelect = (type: HostType) => {
+    setStep(type);
   };
 
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+  const handleSubmit = async () => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
     }
-  };
 
-  const onSubmit = async (data: HostFormData) => {
-    if (!user) return;
     setIsLoading(true);
+    setError('');
+
     try {
-      await upgradeToHost();
-      setIsComplete(true);
-    } catch (error) {
-      console.error('Error upgrading to host:', error);
+      switch (step) {
+        case 'vehicle':
+          await HostService.registerAsVehicleHost(user.uid, user.email || '', vehicleData);
+          break;
+        case 'guide':
+          await HostService.registerAsLocalGuide(user.uid, user.email || '', guideData);
+          break;
+        case 'tournament':
+          await HostService.registerAsTournamentHost(user.uid, user.email || '', tournamentData);
+          break;
+        case 'experience':
+          await HostService.registerAsExperienceHost(user.uid, user.email || '', experienceData);
+          break;
+      }
+      setSuccess(true);
+    } catch (err: any) {
+      setError(err.message || 'Failed to submit application');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const benefits = [
-    { icon: Car, title: 'Earn Extra Income', description: 'Set your own prices and earn money from your vehicle' },
-    { icon: Shield, title: 'Insurance Coverage', description: 'All bookings are covered by comprehensive insurance' },
-    { icon: Clock, title: 'Flexible Schedule', description: 'You control when your vehicle is available' },
-    { icon: Star, title: 'Build Your Reputation', description: 'Get rated by renters and build credibility' },
-  ];
+  const toggleArrayItem = (arr: string[], item: string) => {
+    if (arr.includes(item)) {
+      return arr.filter(i => i !== item);
+    }
+    return [...arr, item];
+  };
 
   if (!isAuthenticated) {
     router.push('/auth/login');
     return null;
   }
 
-  if (isComplete) {
+  if (success) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1 flex items-center justify-center py-20">
-          <div className="max-w-md mx-auto text-center px-4">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle className="h-10 w-10 text-green-500" />
+          <div className="max-w-md mx-auto text-center px-4 animate-fade-in-up">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[var(--color-success-bg)] flex items-center justify-center">
+              <CheckCircle className="h-10 w-10 text-[var(--color-success)]" />
             </div>
             <h1 className="text-2xl font-bold text-[var(--color-text)] mb-4">
               Application Submitted!
             </h1>
             <p className="text-[var(--color-text-muted)] mb-8">
-              Your host application is under review. We'll notify you once it's approved, typically within 24-48 hours.
+              Thank you for applying to become a {step === 'select-type' ? 'Host' : `${HOST_TYPES.find(t => t.id === step)?.title}!`} We'll review your application and get back to you within 24-48 hours.
             </p>
             <Button onClick={() => router.push('/dashboard/user')} className="w-full">
               Go to Dashboard
@@ -116,206 +222,519 @@ export default function HostOnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--color-background)]">
+    <div className="min-h-screen flex flex-col bg-[var(--color-surface-muted)]">
       <Header />
 
       <main className="flex-1 py-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-[var(--color-text)]">Become a Host</h1>
-            <p className="text-[var(--color-text-muted)] mt-2">
-              Start earning by listing your vehicle
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm mb-4">
+              <span className="text-2xl">🐝</span>
+              <span className="text-sm font-medium text-[var(--color-text)]">HelpHive</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-[var(--color-text)]">
+              {step === 'select-type' ? 'Become a Host' : `${HOST_TYPES.find(t => t.id === step)?.title} Application`}
+            </h1>
+            <p className="text-[var(--color-text-muted)] mt-2 max-w-xl mx-auto">
+              {step === 'select-type'
+                ? 'Choose how you want to earn with HelpHive. Each host type offers unique benefits.'
+                : `Fill out the details below to apply as a ${HOST_TYPES.find(t => t.id === step)?.title.toLowerCase()}.`
+              }
             </p>
           </div>
 
-          {/* Progress Steps */}
-          <div className="flex items-center justify-between mb-8 px-4">
-            {steps.map((step, index) => (
-              <div key={step.number} className="flex items-center">
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                      currentStep >= step.number
-                        ? 'bg-[var(--color-primary)] text-white'
-                        : 'bg-gray-200 text-gray-500'
-                    }`}
-                  >
-                    {currentStep > step.number ? (
-                      <CheckCircle className="h-5 w-5" />
-                    ) : (
-                      <step.icon className="h-5 w-5" />
-                    )}
+          {error && (
+            <div className="mb-6 p-4 rounded-[var(--radius-lg)] bg-[var(--color-error-bg)] border border-[var(--color-error)]/20 text-center">
+              <p className="text-sm text-[var(--color-error)]">{error}</p>
+            </div>
+          )}
+
+          {/* Back Button */}
+          {step !== 'select-type' && (
+            <button
+              onClick={() => setStep('select-type')}
+              className="mb-6 flex items-center gap-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
+            >
+              <ChevronRight className="w-4 h-4 rotate-180" />
+              Back to host types
+            </button>
+          )}
+
+          {/* Host Type Selection */}
+          {step === 'select-type' && (
+            <div className="grid md:grid-cols-2 gap-6">
+              {HOST_TYPES.map((type) => (
+                <button
+                  key={type.id}
+                  onClick={() => handleTypeSelect(type.id)}
+                  className="group text-left bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-transparent hover:border-[var(--color-primary)]"
+                >
+                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${type.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                    <type.icon className="h-7 w-7 text-white" />
                   </div>
-                  <span className="text-xs mt-1 text-[var(--color-text-muted)] hidden sm:block">
-                    {step.title}
-                  </span>
+                  <h3 className="text-xl font-bold text-[var(--color-text)] mb-2">{type.title}</h3>
+                  <p className="text-sm text-[var(--color-text-muted)] mb-4">{type.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {type.benefits.slice(0, 2).map((benefit) => (
+                      <span key={benefit} className="inline-flex items-center gap-1 text-xs bg-[var(--color-surface-muted)] px-2 py-1 rounded-full">
+                        <CheckCircle className="w-3 h-3 text-[var(--color-success)]" />
+                        {benefit}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-4 flex items-center text-[var(--color-primary)] font-medium text-sm group-hover:gap-2 transition-all">
+                    Apply now
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Vehicle Host Form */}
+          {step === 'vehicle' && (
+            <Card className="max-w-2xl mx-auto">
+              <div className="flex items-center gap-4 mb-6 pb-6 border-b">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                  <Car className="h-6 w-6 text-white" />
                 </div>
-                {index < steps.length - 1 && (
-                  <div
-                    className={`w-16 sm:w-24 h-1 mx-2 rounded ${
-                      currentStep > step.number ? 'bg-[var(--color-primary)]' : 'bg-gray-200'
-                    }`}
-                  />
-                )}
+                <div>
+                  <h2 className="text-xl font-bold text-[var(--color-text)]">Vehicle Host</h2>
+                  <p className="text-sm text-[var(--color-text-muted)]">List your vehicles and start earning</p>
+                </div>
               </div>
-            ))}
-          </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Form */}
-            <div className="lg:col-span-2">
-              <Card>
-                <form onSubmit={handleSubmit(onSubmit)}>
-                  {currentStep === 1 && (
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
-                      <Input
-                        label="Full Name"
-                        placeholder="Enter your full name"
-                        error={errors.displayName?.message}
-                        {...register('displayName')}
-                      />
-                      <Input
-                        label="Phone Number"
-                        type="tel"
-                        placeholder="Enter your phone number"
-                        error={errors.phone?.message}
-                        {...register('phone')}
-                      />
-                      <p className="text-sm text-[var(--color-text-muted)]">
-                        We'll use this information to verify your identity and contact you about your listings.
-                      </p>
-                    </div>
-                  )}
+              <div className="space-y-6">
+                <Input
+                  label="Full Name"
+                  value={vehicleData.displayName}
+                  onChange={(e) => setVehicleData({ ...vehicleData, displayName: e.target.value })}
+                  placeholder="Enter your full name"
+                />
+                <Input
+                  label="Phone Number"
+                  type="tel"
+                  value={vehicleData.phone}
+                  onChange={(e) => setVehicleData({ ...vehicleData, phone: e.target.value })}
+                  placeholder="+91 98765 43210"
+                />
+                <Input
+                  label="License Number"
+                  value={vehicleData.licenseNumber}
+                  onChange={(e) => setVehicleData({ ...vehicleData, licenseNumber: e.target.value })}
+                  placeholder="DL-12-1234567890"
+                />
 
-                  {currentStep === 2 && (
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold mb-4">Location Details</h3>
-                      <Select
-                        label="City"
-                        placeholder="Select your city"
-                        options={[
-                          { value: '', label: 'Select city' },
-                          { value: 'mumbai', label: 'Mumbai' },
-                          { value: 'delhi', label: 'Delhi' },
-                          { value: 'bangalore', label: 'Bangalore' },
-                          { value: 'chennai', label: 'Chennai' },
-                          { value: 'kolkata', label: 'Kolkata' },
-                          { value: 'hyderabad', label: 'Hyderabad' },
-                          { value: 'pune', label: 'Pune' },
-                          { value: 'jaipur', label: 'Jaipur' },
-                          { value: 'goa', label: 'Goa' },
-                        ]}
-                        error={errors.city?.message}
-                        {...register('city')}
-                      />
-                      <Textarea
-                        label="Address"
-                        placeholder="Enter your full address for vehicle pickup"
-                        error={errors.address?.message}
-                        {...register('address')}
-                      />
-                    </div>
-                  )}
-
-                  {currentStep === 3 && (
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold mb-4">Identity Verification</h3>
-                      <Select
-                        label="ID Type"
-                        placeholder="Select ID type"
-                        options={[
-                          { value: '', label: 'Select ID type' },
-                          { value: 'aadhaar', label: 'Aadhaar Card' },
-                          { value: 'passport', label: 'Passport' },
-                          { value: 'driving_license', label: 'Driving License' },
-                          { value: 'voter_id', label: 'Voter ID' },
-                        ]}
-                        error={errors.idType?.message}
-                        {...register('idType')}
-                      />
-                      <Input
-                        label="ID Number"
-                        placeholder="Enter your ID number"
-                        error={errors.idNumber?.message}
-                        {...register('idNumber')}
-                      />
-                      <p className="text-sm text-[var(--color-text-muted)]">
-                        Please ensure the name on your ID matches your registered name. This information is used for verification only.
-                      </p>
-                    </div>
-                  )}
-
-                  {currentStep === 4 && (
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold mb-4">Review & Submit</h3>
-                      <div className="p-4 bg-gray-50 rounded-lg space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-[var(--color-text-muted)]">Name:</span>
-                          <span className="font-medium">To be reviewed</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[var(--color-text-muted)]">Phone:</span>
-                          <span className="font-medium">To be verified</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[var(--color-text-muted)]">City:</span>
-                          <span className="font-medium">To be confirmed</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[var(--color-text-muted)]">ID Type:</span>
-                          <span className="font-medium">To be verified</span>
-                        </div>
-                      </div>
-                      <p className="text-sm text-[var(--color-text-muted)]">
-                        By submitting, you agree to our Host Terms of Service and confirm that all information provided is accurate.
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between mt-6 pt-4 border-t">
-                    {currentStep > 1 && (
-                      <Button type="button" variant="ghost" onClick={prevStep}>
-                        Back
-                      </Button>
-                    )}
-                    <div className="ml-auto">
-                      {currentStep < 4 ? (
-                        <Button type="button" onClick={nextStep}>
-                          Continue
-                        </Button>
-                      ) : (
-                        <Button type="submit" isLoading={isLoading}>
-                          Submit Application
-                        </Button>
-                      )}
-                    </div>
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Vehicle Types</label>
+                  <div className="flex flex-wrap gap-2">
+                    {VEHICLE_TYPES.map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setVehicleData({
+                          ...vehicleData,
+                          vehicleTypes: toggleArrayItem(vehicleData.vehicleTypes, type)
+                        })}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                          vehicleData.vehicleTypes.includes(type)
+                            ? 'bg-[var(--color-primary)] text-white'
+                            : 'bg-[var(--color-surface-muted)] text-[var(--color-text)] hover:bg-[var(--color-border-light)]'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
                   </div>
-                </form>
-              </Card>
-            </div>
-
-            {/* Benefits Sidebar */}
-            <div className="hidden lg:block">
-              <Card className="sticky top-24">
-                <h3 className="font-semibold text-[var(--color-text)] mb-4">Why Become a Host?</h3>
-                <div className="space-y-4">
-                  {benefits.map((benefit) => (
-                    <div key={benefit.title} className="flex gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0">
-                        <benefit.icon className="h-5 w-5 text-[var(--color-primary)]" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-sm">{benefit.title}</div>
-                        <div className="text-xs text-[var(--color-text-muted)]">{benefit.description}</div>
-                      </div>
-                    </div>
-                  ))}
                 </div>
-              </Card>
-            </div>
-          </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Service Areas</label>
+                  <div className="flex flex-wrap gap-2">
+                    {CITIES.map((city) => (
+                      <button
+                        key={city}
+                        onClick={() => setVehicleData({
+                          ...vehicleData,
+                          serviceAreas: toggleArrayItem(vehicleData.serviceAreas, city)
+                        })}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                          vehicleData.serviceAreas.includes(city)
+                            ? 'bg-[var(--color-primary)] text-white'
+                            : 'bg-[var(--color-surface-muted)] text-[var(--color-text)] hover:bg-[var(--color-border-light)]'
+                        }`}
+                      >
+                        {city}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Description</label>
+                  <textarea
+                    value={vehicleData.description}
+                    onChange={(e) => setVehicleData({ ...vehicleData, description: e.target.value })}
+                    placeholder="Tell us about your vehicles and service..."
+                    rows={4}
+                    className="w-full px-4 py-3 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-white text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-text)] resize-none"
+                  />
+                </div>
+
+                <Button
+                  onClick={handleSubmit}
+                  isLoading={isLoading}
+                  className="w-full"
+                  size="lg"
+                >
+                  Submit Application
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {/* Local Guide Form */}
+          {step === 'guide' && (
+            <Card className="max-w-2xl mx-auto">
+              <div className="flex items-center gap-4 mb-6 pb-6 border-b">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                  <MapPin className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-[var(--color-text)]">Local Guide</h2>
+                  <p className="text-sm text-[var(--color-text-muted)]">Share your local expertise</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <Input
+                  label="Full Name"
+                  value={guideData.displayName}
+                  onChange={(e) => setGuideData({ ...guideData, displayName: e.target.value })}
+                  placeholder="Enter your full name"
+                />
+                <Input
+                  label="Phone Number"
+                  type="tel"
+                  value={guideData.phone}
+                  onChange={(e) => setGuideData({ ...guideData, phone: e.target.value })}
+                  placeholder="+91 98765 43210"
+                />
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Primary City</label>
+                  <select
+                    value={guideData.city}
+                    onChange={(e) => setGuideData({ ...guideData, city: e.target.value })}
+                    className="w-full px-4 py-3 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-white text-[var(--color-text)]"
+                  >
+                    <option value="">Select your city</option>
+                    {CITIES.map((city) => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Languages Spoken</label>
+                  <div className="flex flex-wrap gap-2">
+                    {LANGUAGES.map((lang) => (
+                      <button
+                        key={lang}
+                        onClick={() => setGuideData({
+                          ...guideData,
+                          languages: toggleArrayItem(guideData.languages, lang)
+                        })}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                          guideData.languages.includes(lang)
+                            ? 'bg-[var(--color-primary)] text-white'
+                            : 'bg-[var(--color-surface-muted)] text-[var(--color-text)] hover:bg-[var(--color-border-light)]'
+                        }`}
+                      >
+                        {lang}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Tour Categories</label>
+                  <div className="flex flex-wrap gap-2">
+                    {EXPERIENCE_CATEGORIES.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setGuideData({
+                          ...guideData,
+                          categories: toggleArrayItem(guideData.categories, cat)
+                        })}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                          guideData.categories.includes(cat)
+                            ? 'bg-[var(--color-primary)] text-white'
+                            : 'bg-[var(--color-surface-muted)] text-[var(--color-text)] hover:bg-[var(--color-border-light)]'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Input
+                  label="Hourly Rate (₹)"
+                  type="number"
+                  value={guideData.hourlyRate.toString()}
+                  onChange={(e) => setGuideData({ ...guideData, hourlyRate: Number(e.target.value) })}
+                  placeholder="500"
+                />
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Bio</label>
+                  <textarea
+                    value={guideData.bio}
+                    onChange={(e) => setGuideData({ ...guideData, bio: e.target.value })}
+                    placeholder="Tell travelers about yourself and your expertise..."
+                    rows={4}
+                    className="w-full px-4 py-3 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-white text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-text)] resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Experience Level</label>
+                  <select
+                    value={guideData.experience}
+                    onChange={(e) => setGuideData({ ...guideData, experience: e.target.value })}
+                    className="w-full px-4 py-3 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-white text-[var(--color-text)]"
+                  >
+                    <option value="">Select experience level</option>
+                    <option value="beginner">Beginner (0-1 years)</option>
+                    <option value="intermediate">Intermediate (1-3 years)</option>
+                    <option value="experienced">Experienced (3-5 years)</option>
+                    <option value="expert">Expert (5+ years)</option>
+                  </select>
+                </div>
+
+                <Button
+                  onClick={handleSubmit}
+                  isLoading={isLoading}
+                  className="w-full"
+                  size="lg"
+                >
+                  Submit Application
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {/* Tournament Host Form */}
+          {step === 'tournament' && (
+            <Card className="max-w-2xl mx-auto">
+              <div className="flex items-center gap-4 mb-6 pb-6 border-b">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+                  <Trophy className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-[var(--color-text)]">Tournament Host</h2>
+                  <p className="text-sm text-[var(--color-text-muted)]">Organize exciting competitions</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <Input
+                  label="Organization/Individual Name"
+                  value={tournamentData.displayName}
+                  onChange={(e) => setTournamentData({ ...tournamentData, displayName: e.target.value })}
+                  placeholder="Enter your name or organization"
+                />
+                <Input
+                  label="Phone Number"
+                  type="tel"
+                  value={tournamentData.phone}
+                  onChange={(e) => setTournamentData({ ...tournamentData, phone: e.target.value })}
+                  placeholder="+91 98765 43210"
+                />
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Specialties</label>
+                  <div className="flex flex-wrap gap-2">
+                    {SPECIALTIES.map((spec) => (
+                      <button
+                        key={spec}
+                        onClick={() => setTournamentData({
+                          ...tournamentData,
+                          specialties: toggleArrayItem(tournamentData.specialties, spec)
+                        })}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                          tournamentData.specialties.includes(spec)
+                            ? 'bg-[var(--color-primary)] text-white'
+                            : 'bg-[var(--color-surface-muted)] text-[var(--color-text)] hover:bg-[var(--color-border-light)]'
+                        }`}
+                      >
+                        {spec}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Experience Level</label>
+                  <select
+                    value={tournamentData.experience}
+                    onChange={(e) => setTournamentData({ ...tournamentData, experience: e.target.value })}
+                    className="w-full px-4 py-3 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-white text-[var(--color-text)]"
+                  >
+                    <option value="">Select experience level</option>
+                    <option value="beginner">First time organizer</option>
+                    <option value="intermediate">Organized 1-5 events</option>
+                    <option value="experienced">Organized 5-20 events</option>
+                    <option value="expert">Professional organizer (20+ events)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Certifications (if any)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['FMSCI License', 'State Tourism Board', 'ISSF Certified', 'RTO Registered', 'Other'].map((cert) => (
+                      <button
+                        key={cert}
+                        type="button"
+                        onClick={() => setTournamentData({
+                          ...tournamentData,
+                          certifications: tournamentData.certifications.includes(cert)
+                            ? tournamentData.certifications.filter(c => c !== cert)
+                            : [...tournamentData.certifications, cert]
+                        })}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                          tournamentData.certifications.includes(cert)
+                            ? 'bg-[var(--color-primary)] text-white'
+                            : 'bg-[var(--color-surface-muted)] text-[var(--color-text)] hover:bg-[var(--color-border-light)]'
+                        }`}
+                      >
+                        {cert}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Description</label>
+                  <textarea
+                    value={tournamentData.description}
+                    onChange={(e) => setTournamentData({ ...tournamentData, description: e.target.value })}
+                    placeholder="Tell us about your tournament hosting capabilities and past events..."
+                    rows={4}
+                    className="w-full px-4 py-3 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-white text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-text)] resize-none"
+                  />
+                </div>
+
+                <Button
+                  onClick={handleSubmit}
+                  isLoading={isLoading}
+                  className="w-full"
+                  size="lg"
+                >
+                  Submit Application
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {/* Experience Host Form */}
+          {step === 'experience' && (
+            <Card className="max-w-2xl mx-auto">
+              <div className="flex items-center gap-4 mb-6 pb-6 border-b">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                  <Sparkles className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-[var(--color-text)]">Experience Host</h2>
+                  <p className="text-sm text-[var(--color-text-muted)]">Share unique activities</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <Input
+                  label="Your Name / Company Name"
+                  value={experienceData.displayName}
+                  onChange={(e) => setExperienceData({ ...experienceData, displayName: e.target.value })}
+                  placeholder="Enter your name or company"
+                />
+                <Input
+                  label="Phone Number"
+                  type="tel"
+                  value={experienceData.phone}
+                  onChange={(e) => setExperienceData({ ...experienceData, phone: e.target.value })}
+                  placeholder="+91 98765 43210"
+                />
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Experience Categories</label>
+                  <div className="flex flex-wrap gap-2">
+                    {EXPERIENCE_CATEGORIES.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setExperienceData({
+                          ...experienceData,
+                          categories: toggleArrayItem(experienceData.categories, cat)
+                        })}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                          experienceData.categories.includes(cat)
+                            ? 'bg-[var(--color-primary)] text-white'
+                            : 'bg-[var(--color-surface-muted)] text-[var(--color-text)] hover:bg-[var(--color-border-light)]'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Experience Types</label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      'Walking Tours', 'Food Tours', 'Cooking Classes', 'Art Workshops',
+                      'Adventure Activities', 'Photography Tours', 'Music & Dance', 'Yoga & Wellness'
+                    ].map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setExperienceData({
+                          ...experienceData,
+                          experienceTypes: toggleArrayItem(experienceData.experienceTypes, type)
+                        })}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                          experienceData.experienceTypes.includes(type)
+                            ? 'bg-[var(--color-primary)] text-white'
+                            : 'bg-[var(--color-surface-muted)] text-[var(--color-text)] hover:bg-[var(--color-border-light)]'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Description</label>
+                  <textarea
+                    value={experienceData.description}
+                    onChange={(e) => setExperienceData({ ...experienceData, description: e.target.value })}
+                    placeholder="Describe the experiences you want to offer. What makes them unique? What's included? What will guests learn or do?"
+                    rows={5}
+                    className="w-full px-4 py-3 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-white text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-text)] resize-none"
+                  />
+                </div>
+
+                <Button
+                  onClick={handleSubmit}
+                  isLoading={isLoading}
+                  className="w-full"
+                  size="lg"
+                >
+                  Submit Application
+                </Button>
+              </div>
+            </Card>
+          )}
         </div>
       </main>
 

@@ -34,61 +34,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = AuthService.onAuthChange(async (firebaseUser) => {
-      setUser(firebaseUser);
+    // Check if Firebase is configured
+    if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+      setIsLoading(false);
+      return;
+    }
 
-      if (firebaseUser) {
-        try {
-          const profile = await AuthService.getUserProfile(firebaseUser.uid);
-          setUserProfile(profile);
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
+    let unsubscribe: (() => void) | null = null;
+
+    try {
+      unsubscribe = AuthService.onAuthChange(async (firebaseUser) => {
+        setUser(firebaseUser);
+
+        if (firebaseUser) {
+          try {
+            const profile = await AuthService.getUserProfile(firebaseUser.uid);
+            setUserProfile(profile);
+          } catch (error) {
+            console.error('Error fetching user profile:', error);
+            setUserProfile(null);
+          }
+        } else {
           setUserProfile(null);
         }
-      } else {
-        setUserProfile(null);
-      }
 
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.error('Firebase not configured:', error);
       setIsLoading(false);
-    });
+    }
 
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      await AuthService.login(email, password);
-    } finally {
-      setIsLoading(false);
-    }
+    if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) throw new Error('Firebase not configured');
+    await AuthService.login(email, password);
   };
 
   const register = async (email: string, password: string, displayName: string) => {
-    setIsLoading(true);
-    try {
-      await AuthService.register(email, password, displayName);
-    } finally {
-      setIsLoading(false);
-    }
+    if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) throw new Error('Firebase not configured');
+    await AuthService.register(email, password, displayName);
   };
 
   const logout = async () => {
-    setIsLoading(true);
-    try {
-      await AuthService.logout();
-      setUserProfile(null);
-    } finally {
-      setIsLoading(false);
-    }
+    if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) throw new Error('Firebase not configured');
+    await AuthService.logout();
+    setUserProfile(null);
   };
 
   const resetPassword = async (email: string) => {
+    if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) throw new Error('Firebase not configured');
     await AuthService.resetPassword(email);
   };
 
   const refreshUserProfile = async () => {
-    if (user) {
+    if (user && process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
       const profile = await AuthService.getUserProfile(user.uid);
       setUserProfile(profile);
     }

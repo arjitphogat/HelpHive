@@ -3,93 +3,43 @@
 import Link from 'next/link';
 
 export function Footer() {
+  const currentYear = new Date().getFullYear();
+
   const footerLinks = {
-    company: [
-      { label: 'About Us', href: '/about' },
-      { label: 'Careers', href: '/careers' },
-      { label: 'Press', href: '/press' },
-      { label: 'Blog', href: '/blog' },
-    ],
     support: [
       { label: 'Help Center', href: '/help' },
-      { label: 'Safety', href: '/safety' },
-      { label: 'Cancellation', href: '/cancellation' },
-      { label: 'Contact Us', href: '/contact' },
+      { label: 'Safety information', href: '/safety' },
+      { label: 'Cancellation options', href: '/cancellation' },
+      { label: 'Report a concern', href: '/report' },
     ],
-    hosts: [
-      { label: 'List Your Vehicle', href: '/host/onboarding' },
-      { label: 'Host Resources', href: '/host/resources' },
-      { label: 'Community Forum', href: '/community' },
-      { label: 'Responsible Hosting', href: '/responsible' },
+    hosting: [
+      { label: 'List your vehicle', href: '/host/onboarding' },
+      { label: 'Host resources', href: '/host/resources' },
+      { label: 'Community forum', href: '/community' },
+      { label: 'Responsible hosting', href: '/responsible' },
     ],
-    legal: [
-      { label: 'Privacy Policy', href: '/privacy' },
-      { label: 'Terms of Service', href: '/terms' },
-      { label: 'Cookie Policy', href: '/cookies' },
-      { label: 'Sitemap', href: '/sitemap' },
+    helpHive: [
+      { label: 'Newsroom', href: '/newsroom' },
+      { label: 'Careers', href: '/careers' },
+      { label: 'Investors', href: '/investors' },
+      { label: 'Gift cards', href: '/gift-cards' },
     ],
   };
 
-  const socialLinks = [
-    { label: 'Facebook', icon: '📘', href: '#' },
-    { label: 'Twitter', icon: '🐦', href: '#' },
-    { label: 'Instagram', icon: '📷', href: '#' },
-    { label: 'YouTube', icon: '📺', href: '#' },
-  ];
-
   return (
-    <footer className="bg-gray-900 text-gray-300">
+    <footer className="bg-white border-t border-[var(--color-border-light)]">
+      {/* Main Footer */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
-          <div className="col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <span className="text-3xl">🛺</span>
-              <span className="text-xl font-bold text-white font-[var(--font-heading)]">
-                TukTukIndia
-              </span>
-            </Link>
-            <p className="text-sm text-gray-400 mb-4 max-w-xs">
-              Discover the spirit of India with our iconic tuk-tuks, scooters, and bikes.
-              Experience local culture through guided tours and adventures.
-            </p>
-            <div className="flex gap-3">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  aria-label={social.label}
-                  className="h-10 w-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-[var(--color-primary)] transition-colors text-lg"
-                >
-                  {social.icon}
-                </a>
-              ))}
-            </div>
-          </div>
-
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          {/* Support */}
           <div>
-            <h4 className="font-semibold text-white mb-4">Company</h4>
-            <ul className="space-y-2">
-              {footerLinks.company.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm hover:text-[var(--color-primary)] transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold text-white mb-4">Support</h4>
-            <ul className="space-y-2">
+            <h4 className="text-sm font-semibold text-[var(--color-text)] mb-4">Support</h4>
+            <ul className="space-y-3">
               {footerLinks.support.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm hover:text-[var(--color-primary)] transition-colors"
+                    className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -98,14 +48,15 @@ export function Footer() {
             </ul>
           </div>
 
+          {/* Hosting */}
           <div>
-            <h4 className="font-semibold text-white mb-4">For Hosts</h4>
-            <ul className="space-y-2">
-              {footerLinks.hosts.map((link) => (
+            <h4 className="text-sm font-semibold text-[var(--color-text)] mb-4">Hosting</h4>
+            <ul className="space-y-3">
+              {footerLinks.hosting.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm hover:text-[var(--color-primary)] transition-colors"
+                    className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -113,22 +64,73 @@ export function Footer() {
               ))}
             </ul>
           </div>
+
+          {/* HelpHive */}
+          <div>
+            <h4 className="text-sm font-semibold text-[var(--color-text)] mb-4">HelpHive</h4>
+            <ul className="space-y-3">
+              {footerLinks.helpHive.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Logo & Social */}
+          <div className="col-span-2 md:col-span-1">
+            <Link href="/" className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-[var(--radius-md)] flex items-center justify-center" style={{ background: 'var(--color-primary)' }}>
+                <span className="text-white font-bold text-sm">H</span>
+              </div>
+              <span className="text-lg font-bold text-[var(--color-text)]">HelpHive</span>
+            </Link>
+            <div className="flex items-center gap-3">
+              <a
+                href="#"
+                aria-label="Facebook"
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--color-surface-muted)] hover:bg-[var(--color-border)] transition-colors"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              </a>
+              <a
+                href="#"
+                aria-label="Twitter"
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--color-surface-muted)] hover:bg-[var(--color-border)] transition-colors"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              </a>
+              <a
+                href="#"
+                aria-label="Instagram"
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--color-surface-muted)] hover:bg-[var(--color-border)] transition-colors"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+              </a>
+            </div>
+          </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-gray-400">
-            © {new Date().getFullYear()} TukTukIndia. All rights reserved.
+        {/* Bottom Bar */}
+        <div className="mt-12 pt-6 border-t border-[var(--color-border-light)] flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-[var(--color-text-secondary)]">
+            &copy; {currentYear} HelpHive, Inc. All rights reserved.
           </p>
-          <div className="flex gap-6">
-            {footerLinks.legal.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm text-gray-400 hover:text-white transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
+          <div className="flex items-center gap-6">
+            <Link href="/privacy" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors">
+              Privacy
+            </Link>
+            <Link href="/terms" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors">
+              Terms
+            </Link>
+            <Link href="/sitemap" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors">
+              Sitemap
+            </Link>
           </div>
         </div>
       </div>

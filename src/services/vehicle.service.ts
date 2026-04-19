@@ -13,18 +13,18 @@ import {
   startAfter,
   serverTimestamp,
   Timestamp,
-  writeBatch,
-  Firestore,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '@/lib/firebase';
+import { db, storage, isConfigured } from '@/lib/firebase';
 import { Vehicle, VehicleFormData, VehicleType } from '@/types';
+import { sampleVehicles } from '@/data/sample-data';
 
 export class VehicleService {
   static async createVehicle(
     hostId: string,
     data: VehicleFormData
   ): Promise<string> {
+    if (!db) throw new Error('Firebase not initialized');
     const vehicleData = {
       ...data,
       hostId,
@@ -47,6 +47,7 @@ export class VehicleService {
   }
 
   static async getVehicle(id: string): Promise<Vehicle | null> {
+    if (!db) return null;
     const vehicleDoc = await getDoc(doc(db, 'vehicles', id));
     if (!vehicleDoc.exists()) return null;
     return { id: vehicleDoc.id, ...vehicleDoc.data() } as Vehicle;
@@ -62,6 +63,51 @@ export class VehicleService {
     pageSize: number = 20,
     lastDoc?: any
   ): Promise<{ vehicles: Vehicle[]; lastDoc: any }> {
+    // If Firebase not configured, return sample data
+    if (!db) {
+      let vehicles = sampleVehicles.map(v => ({
+        id: v.id,
+        brand: v.brand,
+        model: v.model,
+        type: v.type,
+        city: v.city,
+        pricePerDay: v.pricePerDay,
+        pricePerHour: v.pricePerHour,
+        rating: v.rating,
+        reviewCount: v.reviewCount,
+        images: v.images,
+        hostId: 'sample-host',
+        hostName: v.hostName,
+        hostVerified: v.hostVerified,
+        description: v.description,
+        features: v.features,
+        capacity: v.capacity,
+        fuelType: v.fuelType,
+        transmission: v.transmission,
+        year: v.year,
+        status: 'approved' as const,
+        isApproved: true,
+        totalBookings: 0,
+        totalReviews: 0,
+      })) as Vehicle[];
+
+      // Apply filters
+      if (filters?.type) {
+        vehicles = vehicles.filter(v => v.type === filters.type);
+      }
+      if (filters?.city) {
+        vehicles = vehicles.filter(v => v.city?.toLowerCase() === filters.city?.toLowerCase());
+      }
+      if (filters?.minPrice) {
+        vehicles = vehicles.filter(v => (v.pricePerHour ?? 0) >= filters.minPrice!);
+      }
+      if (filters?.maxPrice) {
+        vehicles = vehicles.filter(v => (v.pricePerHour ?? Infinity) <= filters.maxPrice!);
+      }
+
+      return { vehicles, lastDoc: null };
+    }
+
     let q = query(collection(db, 'vehicles'), where('status', '==', 'approved'));
 
     if (filters?.type) {
@@ -90,6 +136,7 @@ export class VehicleService {
   }
 
   static async getVehiclesByHost(hostId: string): Promise<Vehicle[]> {
+    if (!db) return [];
     const q = query(
       collection(db, 'vehicles'),
       where('hostId', '==', hostId),
@@ -103,6 +150,7 @@ export class VehicleService {
     id: string,
     data: Partial<VehicleFormData>
   ): Promise<void> {
+    if (!db) throw new Error('Firebase not initialized');
     await updateDoc(doc(db, 'vehicles', id), {
       ...data,
       updatedAt: serverTimestamp(),
@@ -110,10 +158,12 @@ export class VehicleService {
   }
 
   static async deleteVehicle(id: string): Promise<void> {
+    if (!db) throw new Error('Firebase not initialized');
     await deleteDoc(doc(db, 'vehicles', id));
   }
 
   static async approveVehicle(id: string): Promise<void> {
+    if (!db) throw new Error('Firebase not initialized');
     await updateDoc(doc(db, 'vehicles', id), {
       status: 'approved',
       isApproved: true,
@@ -122,6 +172,7 @@ export class VehicleService {
   }
 
   static async rejectVehicle(id: string): Promise<void> {
+    if (!db) throw new Error('Firebase not initialized');
     await updateDoc(doc(db, 'vehicles', id), {
       status: 'rejected',
       isApproved: false,
@@ -130,6 +181,7 @@ export class VehicleService {
   }
 
   static async toggleVehicleStatus(id: string, isActive: boolean): Promise<void> {
+    if (!db) throw new Error('Firebase not initialized');
     await updateDoc(doc(db, 'vehicles', id), {
       status: isActive ? 'approved' : 'inactive',
       updatedAt: serverTimestamp(),
@@ -141,6 +193,7 @@ export class VehicleService {
     startDate: Date,
     endDate: Date
   ): Promise<boolean> {
+    if (!db) return true;
     const bookingsQuery = query(
       collection(db, 'bookings'),
       where('vehicleId', '==', vehicleId),
@@ -172,6 +225,7 @@ export class VehicleService {
     vehicleId: string,
     files: File[]
   ): Promise<string[]> {
+    if (!storage) throw new Error('Firebase not initialized');
     const urls: string[] = [];
 
     for (let i = 0; i < files.length; i++) {
@@ -185,32 +239,37 @@ export class VehicleService {
     return urls;
   }
 
-  static async updateVehicleRating(
-    vehicleId: string,
-    newRating: number
-  ): Promise<void> {
-    const vehicle = await this.getVehicle(vehicleId);
-    if (!vehicle) return;
-
-    const totalRatings = vehicle.totalReviews + 1;
-    const updatedRating =
-      (vehicle.rating * vehicle.totalReviews + newRating) / totalRatings;
-
-    await updateDoc(doc(db, 'vehicles', vehicleId), {
-      rating: updatedRating,
-      totalReviews: totalRatings,
-    });
-  }
-
-  static async incrementBookingCount(vehicleId: string): Promise<void> {
-    await updateDoc(doc(db, 'vehicles', vehicleId), {
-      totalBookings: (await this.getVehicle(vehicleId))!.totalBookings + 1,
-    });
-  }
-
   static async getPopularVehicles(
     limitCount: number = 10
   ): Promise<Vehicle[]> {
+    if (!db) {
+      return sampleVehicles.slice(0, limitCount).map(v => ({
+        id: v.id,
+        brand: v.brand,
+        model: v.model,
+        type: v.type,
+        city: v.city,
+        pricePerDay: v.pricePerDay,
+        pricePerHour: v.pricePerHour,
+        rating: v.rating,
+        reviewCount: v.reviewCount,
+        images: v.images,
+        hostId: 'sample-host',
+        hostName: v.hostName,
+        hostVerified: v.hostVerified,
+        description: v.description,
+        features: v.features,
+        capacity: v.capacity,
+        fuelType: v.fuelType,
+        transmission: v.transmission,
+        year: v.year,
+        status: 'approved' as const,
+        isApproved: true,
+        totalBookings: 0,
+        totalReviews: 0,
+      })) as Vehicle[];
+    }
+
     const q = query(
       collection(db, 'vehicles'),
       where('status', '==', 'approved'),
@@ -224,6 +283,34 @@ export class VehicleService {
   static async getFeaturedVehicles(
     limitCount: number = 6
   ): Promise<Vehicle[]> {
+    if (!db) {
+      return sampleVehicles.slice(0, limitCount).map(v => ({
+        id: v.id,
+        brand: v.brand,
+        model: v.model,
+        type: v.type,
+        city: v.city,
+        pricePerDay: v.pricePerDay,
+        pricePerHour: v.pricePerHour,
+        rating: v.rating,
+        reviewCount: v.reviewCount,
+        images: v.images,
+        hostId: 'sample-host',
+        hostName: v.hostName,
+        hostVerified: v.hostVerified,
+        description: v.description,
+        features: v.features,
+        capacity: v.capacity,
+        fuelType: v.fuelType,
+        transmission: v.transmission,
+        year: v.year,
+        status: 'approved' as const,
+        isApproved: true,
+        totalBookings: 0,
+        totalReviews: 0,
+      })) as Vehicle[];
+    }
+
     const q = query(
       collection(db, 'vehicles'),
       where('status', '==', 'approved'),
@@ -232,19 +319,5 @@ export class VehicleService {
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Vehicle[];
-  }
-
-  static async searchVehicles(
-    searchQuery: string
-  ): Promise<Vehicle[]> {
-    const { vehicles } = await this.getVehicles();
-    const query = searchQuery.toLowerCase();
-    return vehicles.filter(
-      (v) =>
-        v.brand.toLowerCase().includes(query) ||
-        v.model.toLowerCase().includes(query) ||
-        v.city.toLowerCase().includes(query) ||
-        v.type.toLowerCase().includes(query)
-    );
   }
 }

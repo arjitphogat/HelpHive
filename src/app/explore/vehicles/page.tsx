@@ -1,26 +1,42 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Header, Footer } from '@/components/layout';
 import { VehicleCard } from '@/components/vehicles/VehicleCard';
 import { Input, Select, Button, Card } from '@/components/ui';
 import { VehicleService } from '@/services/vehicle.service';
 import { Vehicle, VehicleType } from '@/types';
 import { VEHICLE_TYPES, CITIES } from '@/constants';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { sampleVehicles } from '@/data/sample-data';
+import { Search, SlidersHorizontal, X, Calendar, MapPin, Users } from 'lucide-react';
 
-export default function ExploreVehiclesPage() {
+function ExploreVehiclesContent() {
+  const searchParams = useSearchParams();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Read URL params from homepage search
+  const urlCity = searchParams.get('city') || '';
+  const urlCheckIn = searchParams.get('checkIn');
+  const urlCheckOut = searchParams.get('checkOut');
+  const urlGuests = searchParams.get('guests');
+
   const [filters, setFilters] = useState({
     type: '' as VehicleType | '',
-    city: '',
+    city: urlCity,
     minPrice: '',
     maxPrice: '',
   });
+
+  // Update filters when URL params change
+  useEffect(() => {
+    if (urlCity) {
+      setFilters(prev => ({ ...prev, city: urlCity }));
+    }
+  }, [urlCity]);
 
   useEffect(() => {
     loadVehicles();
@@ -35,9 +51,146 @@ export default function ExploreVehiclesPage() {
         minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
         maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
       });
-      setVehicles(data.vehicles);
+
+      // If no vehicles from Firebase, use sample data
+      let displayVehicles = data.vehicles;
+
+      if (displayVehicles.length === 0) {
+        // Apply sample data with filters
+        displayVehicles = sampleVehicles.map((v, index) => ({
+          id: v.id,
+          brand: v.brand.trim(),
+          model: v.model,
+          type: v.type,
+          city: v.city,
+          pricePerHour: v.pricePerHour,
+          pricePerDay: v.pricePerDay,
+          hourlyRate: v.pricePerHour,
+          rating: v.rating,
+          totalReviews: v.reviewCount,
+          reviewCount: v.reviewCount,
+          totalBookings: Math.floor(Math.random() * 100) + 10,
+          primaryImage: v.image,
+          images: v.images,
+          capacity: v.capacity,
+          fuelType: v.fuelType,
+          transmission: v.transmission,
+          features: v.features,
+          hostName: v.hostName,
+          hostVerified: v.hostVerified,
+          status: 'approved' as const,
+          isApproved: true,
+          minimumDuration: 1,
+        }));
+
+        // Apply city filter to sample data
+        if (filters.city) {
+          displayVehicles = displayVehicles.filter(v =>
+            v.city?.toLowerCase() === filters.city.toLowerCase()
+          );
+        }
+
+        // Apply type filter
+        if (filters.type) {
+          displayVehicles = displayVehicles.filter(v =>
+            v.type === filters.type
+          );
+        }
+
+        // Apply price filters
+        if (filters.minPrice) {
+          displayVehicles = displayVehicles.filter(v =>
+            (v.pricePerHour ?? 0) >= Number(filters.minPrice)
+          );
+        }
+        if (filters.maxPrice) {
+          displayVehicles = displayVehicles.filter(v =>
+            (v.pricePerHour ?? Infinity) <= Number(filters.maxPrice)
+          );
+        }
+      } else {
+        // Merge sample data with Firebase data, avoiding duplicates
+        const sampleMapped = sampleVehicles.map((v) => ({
+          id: v.id,
+          brand: v.brand.trim(),
+          model: v.model,
+          type: v.type,
+          city: v.city,
+          pricePerHour: v.pricePerHour,
+          pricePerDay: v.pricePerDay,
+          hourlyRate: v.pricePerHour,
+          rating: v.rating,
+          totalReviews: v.reviewCount,
+          reviewCount: v.reviewCount,
+          totalBookings: Math.floor(Math.random() * 100) + 10,
+          primaryImage: v.image,
+          images: v.images,
+          capacity: v.capacity,
+          fuelType: v.fuelType,
+          transmission: v.transmission,
+          features: v.features,
+          hostName: v.hostName,
+          hostVerified: v.hostVerified,
+          status: 'approved' as const,
+          isApproved: true,
+          minimumDuration: 1,
+        }));
+
+        const firebaseIds = new Set(displayVehicles.map(v => v.id));
+        const uniqueSamples = sampleMapped.filter(v => !firebaseIds.has(v.id));
+
+        // Apply filters to combined data
+        displayVehicles = [...displayVehicles, ...uniqueSamples];
+
+        if (filters.city) {
+          displayVehicles = displayVehicles.filter(v =>
+            v.city?.toLowerCase() === filters.city.toLowerCase()
+          );
+        }
+        if (filters.type) {
+          displayVehicles = displayVehicles.filter(v => v.type === filters.type);
+        }
+        if (filters.minPrice) {
+          displayVehicles = displayVehicles.filter(v =>
+            (v.pricePerHour ?? 0) >= Number(filters.minPrice)
+          );
+        }
+        if (filters.maxPrice) {
+          displayVehicles = displayVehicles.filter(v =>
+            (v.pricePerHour ?? Infinity) <= Number(filters.maxPrice)
+          );
+        }
+      }
+
+      setVehicles(displayVehicles);
     } catch (error) {
       console.error('Error loading vehicles:', error);
+      // Fallback to sample data on error
+      setVehicles(sampleVehicles.map((v) => ({
+        id: v.id,
+        brand: v.brand.trim(),
+        model: v.model,
+        type: v.type,
+        city: v.city,
+        pricePerHour: v.pricePerHour,
+        pricePerDay: v.pricePerDay,
+        hourlyRate: v.pricePerHour,
+        rating: v.rating,
+        totalReviews: v.reviewCount,
+        reviewCount: v.reviewCount,
+        totalBookings: Math.floor(Math.random() * 100) + 10,
+        primaryImage: v.image,
+        images: v.images,
+        capacity: v.capacity,
+        fuelType: v.fuelType,
+        transmission: v.transmission,
+        features: v.features,
+        hostName: v.hostName,
+        hostVerified: v.hostVerified,
+        status: 'approved' as const,
+        isApproved: true,
+        minimumDuration: 1,
+      })));
     } finally {
       setIsLoading(false);
     }
@@ -49,8 +202,8 @@ export default function ExploreVehiclesPage() {
     return (
       vehicle.brand.toLowerCase().includes(query) ||
       vehicle.model.toLowerCase().includes(query) ||
-      vehicle.city.toLowerCase().includes(query) ||
-      vehicle.type.toLowerCase().includes(query)
+      (vehicle.city?.toLowerCase().includes(query) ?? false) ||
+      (vehicle.type?.toLowerCase().includes(query) ?? false)
     );
   });
 
@@ -64,6 +217,7 @@ export default function ExploreVehiclesPage() {
   };
 
   const hasActiveFilters = Object.values(filters).some((v) => v !== '');
+  const hasSearchParams = urlCity || urlCheckIn || urlGuests;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -71,13 +225,45 @@ export default function ExploreVehiclesPage() {
 
       <main className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Search Summary from Homepage */}
+          {hasSearchParams && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-[#FF385C]/5 to-purple-500/5 rounded-2xl border border-gray-100">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-[#FF385C]" />
+                  <span className="font-medium">{filters.city || 'All Cities'}</span>
+                </div>
+                {urlCheckIn && urlCheckOut && (
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-[#FF385C]" />
+                    <span>
+                      {new Date(urlCheckIn).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(urlCheckOut).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                  </div>
+                )}
+                {urlGuests && Number(urlGuests) > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-[#FF385C]" />
+                    <span>{urlGuests} guest{Number(urlGuests) > 1 ? 's' : ''}</span>
+                  </div>
+                )}
+                <button
+                  onClick={clearFilters}
+                  className="ml-auto text-sm text-[#FF385C] hover:underline"
+                >
+                  Clear all
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Hero */}
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-[var(--color-text)]">
-              Explore Vehicles
+              {filters.city ? `Vehicles in ${filters.city}` : 'Explore Vehicles'}
             </h1>
             <p className="text-[var(--color-text-muted)] mt-2">
-              Find the perfect ride for your Indian adventure
+              {filteredVehicles.length} {filteredVehicles.length === 1 ? 'vehicle' : 'vehicles'} available
             </p>
           </div>
 
@@ -251,5 +437,18 @@ export default function ExploreVehiclesPage() {
 
       <Footer />
     </div>
+  );
+}
+
+// Wrap in Suspense for useSearchParams
+export default function ExploreVehiclesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#FF385C] border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <ExploreVehiclesContent />
+    </Suspense>
   );
 }

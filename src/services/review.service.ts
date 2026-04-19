@@ -25,6 +25,8 @@ export class ReviewService {
     vehicleId?: string,
     experienceId?: string
   ): Promise<string> {
+    if (!db) throw new Error('Firebase not initialized');
+
     const reviewData = {
       bookingId,
       reviewerId,
@@ -59,6 +61,8 @@ export class ReviewService {
   }
 
   static async getReview(id: string): Promise<Review | null> {
+    if (!db) return null;
+
     const reviewDoc = await getDoc(doc(db, 'reviews', id));
     if (!reviewDoc.exists()) return null;
     return { id: reviewDoc.id, ...reviewDoc.data() } as Review;
@@ -68,6 +72,8 @@ export class ReviewService {
     vehicleId: string,
     pageSize: number = 20
   ): Promise<Review[]> {
+    if (!db) return [];
+
     const q = query(
       collection(db, 'reviews'),
       where('vehicleId', '==', vehicleId),
@@ -85,6 +91,8 @@ export class ReviewService {
     experienceId: string,
     pageSize: number = 20
   ): Promise<Review[]> {
+    if (!db) return [];
+
     const q = query(
       collection(db, 'reviews'),
       where('experienceId', '==', experienceId),
@@ -99,6 +107,8 @@ export class ReviewService {
   }
 
   static async getReviewsByUser(userId: string): Promise<Review[]> {
+    if (!db) return [];
+
     const q = query(
       collection(db, 'reviews'),
       where('reviewerId', '==', userId),
@@ -116,6 +126,8 @@ export class ReviewService {
     revieweeId: string,
     responseText: string
   ): Promise<void> {
+    if (!db) throw new Error('Firebase not initialized');
+
     await updateDoc(doc(db, 'reviews', reviewId), {
       response: {
         text: responseText,
@@ -194,6 +206,8 @@ export class ReviewService {
     experienceId: string | undefined,
     newRating: number
   ): Promise<void> {
+    if (!db) return;
+
     if (vehicleId) {
       const reviews = await this.getReviewsForVehicle(vehicleId);
       const totalRating = reviews.reduce((sum, r) => sum + r.overallRating, 0);
@@ -218,6 +232,8 @@ export class ReviewService {
   }
 
   static async getGuideRating(guideId: string): Promise<number> {
+    if (!db) return 0;
+
     const experiencesQuery = query(
       collection(db, 'experiences'),
       where('guideId', '==', guideId)
@@ -240,6 +256,8 @@ export class ReviewService {
   }
 
   static async getHostRating(hostId: string): Promise<number> {
+    if (!db) return 0;
+
     const vehiclesQuery = query(
       collection(db, 'vehicles'),
       where('hostId', '==', hostId)

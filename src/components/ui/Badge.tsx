@@ -9,17 +9,13 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-gray-100 text-gray-800',
+        default: 'bg-[var(--color-surface-muted)] text-[var(--color-text-secondary)]',
         primary: 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]',
         secondary: 'bg-[var(--color-secondary)]/10 text-[var(--color-secondary)]',
-        success: 'bg-green-100 text-green-800',
-        warning: 'bg-yellow-100 text-yellow-800',
-        error: 'bg-red-100 text-red-800',
-        info: 'bg-blue-100 text-blue-800',
-        purple: 'bg-purple-100 text-purple-800',
-        gold: 'bg-amber-100 text-amber-800',
-        silver: 'bg-gray-200 text-gray-700',
-        bronze: 'bg-orange-100 text-orange-800',
+        success: 'bg-[var(--color-success-light)] text-[var(--color-success)]',
+        warning: 'bg-[var(--color-warning-light)] text-[var(--color-warning)]',
+        error: 'bg-[var(--color-error-light)] text-[var(--color-error)]',
+        info: 'bg-[var(--color-info-light)] text-[var(--color-info)]',
       },
       size: {
         sm: 'px-2 py-0 text-[10px]',

@@ -12,7 +12,7 @@ import {
   serverTimestamp,
   increment,
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, getDb } from '@/lib/firebase';
 import {
   Tournament,
   Challenge,
@@ -35,6 +35,8 @@ export class TournamentService {
       gold: TournamentReward;
     };
   }): Promise<string> {
+    if (!db) throw new Error('Firebase not initialized');
+
     const challenges = data.challenges.map((c, i) => ({
       ...c,
       id: `challenge_${i + 1}`,
@@ -47,17 +49,21 @@ export class TournamentService {
       createdAt: serverTimestamp(),
     };
 
-    const docRef = await addDoc(collection(db, 'tournaments'), tournamentData);
+    const docRef = await addDoc(collection(getDb(), 'tournaments'), tournamentData);
     return docRef.id;
   }
 
   static async getTournament(id: string): Promise<Tournament | null> {
+    if (!db) return null;
+
     const tournamentDoc = await getDoc(doc(db, 'tournaments', id));
     if (!tournamentDoc.exists()) return null;
     return { id: tournamentDoc.id, ...tournamentDoc.data() } as Tournament;
   }
 
   static async getActiveTournament(): Promise<Tournament | null> {
+    if (!db) return null;
+
     const q = query(
       collection(db, 'tournaments'),
       where('status', '==', 'active'),
@@ -70,6 +76,8 @@ export class TournamentService {
   }
 
   static async getTournaments(): Promise<Tournament[]> {
+    if (!db) return [];
+
     const q = query(
       collection(db, 'tournaments'),
       orderBy('startDate', 'desc')
@@ -85,6 +93,8 @@ export class TournamentService {
     id: string,
     status: 'upcoming' | 'active' | 'completed'
   ): Promise<void> {
+    if (!db) throw new Error('Firebase not initialized');
+
     await updateDoc(doc(db, 'tournaments', id), {
       status,
       updatedAt: serverTimestamp(),
@@ -95,6 +105,8 @@ export class TournamentService {
     tournamentId: string,
     pageSize: number = 20
   ): Promise<LeaderboardEntry[]> {
+    if (!db) return [];
+
     const q = query(
       collection(db, 'tournaments', tournamentId, 'leaderboard'),
       orderBy('rank', 'asc'),
@@ -111,6 +123,8 @@ export class TournamentService {
     odinal: string,
     tournamentId: string
   ): Promise<number | null> {
+    if (!db) return null;
+
     const q = query(
       collection(db, 'tournaments', tournamentId, 'leaderboard'),
       where('odinal', '==', odinal)
@@ -130,6 +144,8 @@ export class TournamentService {
       distanceCovered?: number;
     }
   ): Promise<void> {
+    if (!db) throw new Error('Firebase not initialized');
+
     const leaderboardRef = doc(
       db,
       'tournaments',
@@ -165,6 +181,8 @@ export class TournamentService {
   }
 
   static async recalculateLeaderboard(tournamentId: string): Promise<void> {
+    if (!db) throw new Error('Firebase not initialized');
+
     const leaderboard = await this.getLeaderboard(tournamentId, 100);
 
     const sorted = leaderboard.sort((a, b) => {
@@ -182,6 +200,8 @@ export class TournamentService {
   }
 
   static async awardBadges(tournamentId: string): Promise<void> {
+    if (!db) throw new Error('Firebase not initialized');
+
     const leaderboard = await this.getLeaderboard(tournamentId, 3);
 
     const badges = ['gold', 'silver', 'bronze'];

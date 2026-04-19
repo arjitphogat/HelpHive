@@ -41,7 +41,7 @@ export function VehicleCard({
             />
             <div className="absolute left-2 top-2">
               <Badge variant="primary" size="sm">
-                {vehicleType?.icon} {getVehicleTypeLabel(vehicle.type)}
+                {vehicleType?.icon} {getVehicleTypeLabel(vehicle.type || '')}
               </Badge>
             </div>
           </div>
@@ -54,9 +54,9 @@ export function VehicleCard({
               {vehicle.city}
             </p>
             <div className="flex items-center justify-between mt-2">
-              <StarRating rating={vehicle.rating} size="sm" />
+              <StarRating rating={vehicle.rating || 0} size="sm" />
               <span className="font-semibold text-[var(--color-primary)]">
-                {formatCurrency(vehicle.hourlyRate)}/hr
+                {formatCurrency(vehicle.hourlyRate || vehicle.pricePerHour || vehicle.pricePerDay || 0)}/hr
               </span>
             </div>
           </div>
@@ -81,10 +81,10 @@ export function VehicleCard({
           />
           <div className="absolute left-3 top-3 flex gap-2">
             <Badge variant="primary">
-              {vehicleType?.icon} {getVehicleTypeLabel(vehicle.type)}
+              {vehicleType?.icon} {getVehicleTypeLabel(vehicle.type || '')}
             </Badge>
           </div>
-          {vehicle.totalBookings > 10 && (
+          {(vehicle.totalBookings ?? 0) > 10 && (
             <Badge variant="success" className="absolute right-3 top-3">
               Popular
             </Badge>
@@ -99,13 +99,13 @@ export function VehicleCard({
               </h3>
               <p className="text-sm text-[var(--color-text-muted)] flex items-center gap-1 mt-1">
                 <MapPin className="h-3 w-3" />
-                {vehicle.city}, {vehicle.state}
+                {(vehicle.city || 'Unknown')}, {(vehicle.state || '')}
               </p>
             </div>
-            {vehicle.rating > 0 && (
+            {(vehicle.rating ?? 0) > 0 && (
               <div className="flex items-center gap-1">
                 <Star className="h-4 w-4 fill-[var(--color-warning)] text-[var(--color-warning)]" />
-                <span className="font-medium">{vehicle.rating.toFixed(1)}</span>
+                <span className="font-medium">{(vehicle.rating ?? 0).toFixed(1)}</span>
                 <span className="text-sm text-[var(--color-text-muted)]">
                   ({vehicle.totalReviews})
                 </span>
@@ -116,15 +116,15 @@ export function VehicleCard({
           <div className="mt-3 flex flex-wrap gap-3 text-sm text-[var(--color-text-muted)]">
             <span className="flex items-center gap-1">
               <Users className="h-4 w-4" />
-              {vehicle.capacity}
+              {(vehicle.capacity || 0)}
             </span>
             <span className="flex items-center gap-1">
               <Fuel className="h-4 w-4" />
-              {vehicle.fuelType}
+              {(vehicle.fuelType || 'Petrol')}
             </span>
             <span className="flex items-center gap-1">
               <Gauge className="h-4 w-4" />
-              {vehicle.transmission}
+              {(vehicle.transmission || 'Manual')}
             </span>
           </div>
 
@@ -132,19 +132,19 @@ export function VehicleCard({
             <div>
               <div className="flex items-baseline gap-1">
                 <span className="text-xl font-bold text-[var(--color-primary)]">
-                  {formatCurrency(vehicle.hourlyRate)}
+                  {formatCurrency(vehicle.hourlyRate || vehicle.pricePerHour || vehicle.pricePerDay || 0)}
                 </span>
                 <span className="text-sm text-[var(--color-text-muted)]">/hour</span>
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-lg font-semibold text-[var(--color-text)]">
-                  {formatCurrency(vehicle.dailyRate)}
+                  {formatCurrency(vehicle.pricePerDay || 0)}
                 </span>
                 <span className="text-sm text-[var(--color-text-muted)]">/day</span>
               </div>
             </div>
             <span className="text-sm text-[var(--color-text-muted)]">
-              Min. {vehicle.minimumDuration}hr
+              Min. {(vehicle.minimumDuration || 1)}hr
             </span>
           </div>
         </div>

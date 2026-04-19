@@ -7,8 +7,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button, Input } from '@/components/ui';
-import { Mail, Lock, Eye } from 'lucide-react';
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
+import { auth, isConfigured } from '@/lib/firebase';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -19,9 +19,11 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated } = useAuth();
+  const { refreshUserProfile } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -31,152 +33,199 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  if (isAuthenticated) {
-    router.push('/dashboard/user');
-    return null;
-  }
+  const handleGoogleSignIn = async () => {
+    if (!isConfigured || !auth) {
+      router.push('/dashboard/user');
+      return;
+    }
+
+    setGoogleLoading(true);
+    setError('');
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      router.push('/dashboard/user');
+    } catch (err: any) {
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setError(err.message || 'Failed to sign in with Google');
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const onSubmit = async (data: LoginFormData) => {
+    if (!isConfigured || !auth) {
+      router.push('/dashboard/user');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
     try {
-      await login(data.email, data.password);
+      await signInWithEmailAndPassword(auth, data.email, data.password);
       router.push('/dashboard/user');
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in. Please check your credentials.');
+      if (err.code === 'auth/user-not-found') {
+        setError('No account found with this email. Please sign up first.');
+      } else if (err.code === 'auth/wrong-password') {
+        setError('Incorrect password. Please try again.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Invalid email address.');
+      } else {
+        setError(err.message || 'Failed to sign in. Please check your credentials.');
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <div className="mb-8">
-            <Link href="/" className="flex items-center gap-2 mb-6">
-              <span className="text-3xl">🛺</span>
-              <span className="text-xl font-bold text-[var(--color-primary)] font-[var(--font-heading)]">
-                TukTukIndia
-              </span>
-            </Link>
-            <h1 className="text-2xl font-bold text-[var(--color-text)]">Welcome back</h1>
-            <p className="text-[var(--color-text-muted)] mt-2">
-              Sign in to continue to your account
-            </p>
-          </div>
+    <div className="min-h-screen flex items-center justify-center bg-[var(--color-surface-muted)] px-4 py-6 sm:py-12 overflow-y-auto">
+      {/* Background Pattern */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[var(--color-primary)]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[var(--color-primary)]/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+      </div>
+
+      <div className="relative w-full max-w-[440px] flex-shrink-0">
+        {/* Logo */}
+        <div className="text-center mb-6 sm:mb-8">
+          <Link href="/" className="inline-flex items-center gap-2">
+            <span className="text-3xl sm:text-4xl">🐝</span>
+            <span className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">HelpHive</span>
+          </Link>
+        </div>
+
+        {/* Card */}
+        <div className="bg-white rounded-2xl sm:rounded-[var(--radius-xl)] shadow-[var(--shadow-modal)] p-6 sm:p-8 animate-fade-in-up overflow-y-auto max-h-[calc(100vh-120px)]">
+          <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)] text-center mb-1 sm:mb-2">Welcome back</h1>
+          <p className="text-sm sm:text-base text-[var(--color-text-secondary)] text-center mb-4 sm:mb-6">Sign in to your HelpHive account</p>
 
           {error && (
-            <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-              {error}
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl sm:rounded-[var(--radius-lg)] bg-[var(--color-error-bg)] border border-[var(--color-error)]/20 animate-fade-in">
+              <p className="text-xs sm:text-sm text-[var(--color-error)]">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <Input
-              label="Email"
-              type="email"
-              placeholder="Enter your email"
-              leftIcon={<Mail className="h-4 w-4" />}
-              error={errors.email?.message}
-              {...register('email')}
-            />
+          {/* Google Button */}
+          <button
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 sm:py-3.5 rounded-xl sm:rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-white hover:bg-[var(--color-surface-muted)] transition-all duration-200 mb-4 sm:mb-6 group"
+          >
+            {googleLoading ? (
+              <div className="w-5 h-5 border-2 border-[var(--color-border-light)] border-t-[var(--color-text)] rounded-full animate-spin" />
+            ) : (
+              <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+            )}
+            <span className="font-medium text-sm sm:text-base text-[var(--color-text)]">Continue with Google</span>
+          </button>
 
-            <Input
-              label="Password"
-              type="password"
-              placeholder="Enter your password"
-              leftIcon={<Lock className="h-4 w-4" />}
-              error={errors.password?.message}
-              {...register('password')}
-            />
+          {/* Divider */}
+          <div className="relative mb-4 sm:mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[var(--color-border-light)]" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="px-4 bg-white text-xs sm:text-sm text-[var(--color-text-muted)]">or sign in with email</span>
+            </div>
+          </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                />
-                <span className="text-sm text-[var(--color-text-muted)]">Remember me</span>
+          {/* Form */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-[var(--color-text)] mb-1 sm:mb-1.5">
+                Email
               </label>
-              <Link
-                href="/auth/forgot-password"
-                className="text-sm text-[var(--color-primary)] hover:underline"
-              >
+              <input
+                type="email"
+                placeholder="you@example.com"
+                className={`w-full px-4 py-3 rounded-xl sm:rounded-[var(--radius-lg)] border ${errors.email ? 'border-[var(--color-error)]' : 'border-[var(--color-border-light)]'} bg-white text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] text-sm transition-all focus:outline-none focus:border-[var(--color-text)] focus:shadow-[0_0_0_1px_var(--color-text)]`}
+                {...register('email')}
+              />
+              {errors.email && (
+                <p className="mt-1 text-xs text-[var(--color-error)]">{errors.email.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-[var(--color-text)] mb-1 sm:mb-1.5">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  className={`w-full px-4 py-3 rounded-xl sm:rounded-[var(--radius-lg)] border ${errors.password ? 'border-[var(--color-error)]' : 'border-[var(--color-border-light)]'} bg-white text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] text-sm transition-all focus:outline-none focus:border-[var(--color-text)] focus:shadow-[0_0_0_1px_var(--color-text)] pr-12`}
+                  {...register('password')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+                >
+                  {showPassword ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="mt-1 text-xs text-[var(--color-error)]">{errors.password.message}</p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end">
+              <Link href="/auth/forgot-password" className="text-xs sm:text-sm text-[var(--color-text-link)] hover:underline">
                 Forgot password?
               </Link>
             </div>
 
-            <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
-              Sign In
-            </Button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 sm:py-3.5 rounded-xl sm:rounded-[var(--radius-lg)] bg-[var(--color-primary)] text-white font-semibold text-sm sm:text-base hover:bg-[var(--color-primary-hover)] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <span>Sign in</span>
+              )}
+            </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-[var(--color-text-muted)]">
-              Don't have an account?{' '}
-              <Link href="/auth/register" className="text-[var(--color-primary)] font-medium hover:underline">
-                Sign up
-              </Link>
-            </p>
-          </div>
-
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-[var(--color-background)] text-[var(--color-text-muted)]">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <Button variant="outline" className="w-full">
-                <svg className="h-5 w-5" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-                Google
-              </Button>
-              <Button variant="outline" className="w-full">
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-                Facebook
-              </Button>
-            </div>
-          </div>
+          {/* Footer */}
+          <p className="mt-6 sm:mt-8 text-center text-sm text-[var(--color-text-secondary)]">
+            Don't have an account?{' '}
+            <Link href="/auth/register" className="text-[var(--color-primary)] font-medium hover:underline">
+              Create one
+            </Link>
+          </p>
         </div>
-      </div>
 
-      {/* Right Side - Image */}
-      <div className="hidden lg:block flex-1 bg-gradient-to-br from-[var(--color-primary)] to-[#D35400]">
-        <div className="h-full flex flex-col items-center justify-center p-12 text-white">
-          <div className="text-center">
-            <div className="text-8xl mb-6">🛺</div>
-            <h2 className="text-3xl font-bold mb-4">Discover India Your Way</h2>
-            <p className="text-white/80 max-w-md">
-              Join thousands of travelers exploring India with iconic tuk-tuks, scooters, and bikes from trusted local hosts.
-            </p>
-          </div>
+        {/* Back to home */}
+        <div className="mt-4 sm:mt-6 text-center">
+          <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to HelpHive
+          </Link>
         </div>
       </div>
     </div>

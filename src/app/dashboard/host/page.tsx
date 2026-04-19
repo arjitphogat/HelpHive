@@ -192,7 +192,7 @@ export default function HostDashboard() {
                       <div className="flex-1">
                         <div className="font-medium">{vehicle.brand} {vehicle.model}</div>
                         <div className="text-sm text-[var(--color-text-muted)]">
-                          {vehicle.city} • {formatCurrency(vehicle.hourlyRate)}/hr
+                          {vehicle.city} • {formatCurrency(vehicle.hourlyRate || 0)}/hr
                         </div>
                       </div>
                       <Badge

@@ -277,10 +277,10 @@ export default function AdminDashboard() {
                       <div className="flex-1">
                         <div className="font-semibold">{vehicle.brand} {vehicle.model}</div>
                         <div className="text-sm text-[var(--color-text-muted)]">
-                          {vehicle.city} • Host: {vehicle.hostId.slice(0, 8)}...
+                          {vehicle.city} • Host: {vehicle.hostId?.slice(0, 8) || "HelpHive"}...
                         </div>
                         <div className="text-sm text-[var(--color-text-muted)]">
-                          Added: {formatDate(vehicle.createdAt.toDate())}
+                          Added: {formatDate(vehicle.createdAt?.toDate() || new Date())}
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -315,10 +315,10 @@ export default function AdminDashboard() {
                       <div className="flex-1">
                         <div className="font-semibold">{experience.title}</div>
                         <div className="text-sm text-[var(--color-text-muted)]">
-                          {experience.category} • Guide: {experience.guideId.slice(0, 8)}...
+                          {experience.category} • Guide: {experience.hostId?.slice(0, 8) || "HelpHive"}...
                         </div>
                         <div className="text-sm text-[var(--color-text-muted)]">
-                          Added: {formatDate(experience.createdAt.toDate())}
+                          Added: {formatDate(new Date().toLocaleDateString())}
                         </div>
                       </div>
                       <div className="flex gap-2">

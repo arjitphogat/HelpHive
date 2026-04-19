@@ -25,6 +25,8 @@ export class ChatService {
     vehicleId?: string,
     experienceId?: string
   ): Promise<string> {
+    if (!db) throw new Error('Firebase not initialized');
+
     const existingChat = await this.findExistingChat(participants);
     if (existingChat) {
       return existingChat.id;
@@ -45,6 +47,8 @@ export class ChatService {
   }
 
   static async findExistingChat(participants: string[]): Promise<Chat | null> {
+    if (!db) return null;
+
     const sortedParticipants = [...participants].sort();
     const q = query(
       collection(db, 'chats'),
@@ -56,12 +60,16 @@ export class ChatService {
   }
 
   static async getChat(id: string): Promise<Chat | null> {
+    if (!db) return null;
+
     const chatDoc = await getDoc(doc(db, 'chats', id));
     if (!chatDoc.exists()) return null;
     return { id: chatDoc.id, ...chatDoc.data() } as Chat;
   }
 
   static async getUserChats(userId: string): Promise<Chat[]> {
+    if (!db) return [];
+
     const q = query(
       collection(db, 'chats'),
       where('participants', 'array-contains', userId),
@@ -77,6 +85,8 @@ export class ChatService {
     text: string,
     type: 'text' | 'image' | 'location' = 'text'
   ): Promise<string> {
+    if (!db) throw new Error('Firebase not initialized');
+
     const chat = await this.getChat(chatId);
     if (!chat) throw new Error('Chat not found');
 
@@ -129,6 +139,8 @@ export class ChatService {
     latitude: number,
     longitude: number
   ): Promise<string> {
+    if (!db) throw new Error('Firebase not initialized');
+
     const messageData = {
       senderId,
       text: 'Location shared',
@@ -157,6 +169,8 @@ export class ChatService {
     senderId: string,
     file: File
   ): Promise<string> {
+    if (!db || !storage) throw new Error('Firebase not initialized');
+
     const storageRef = ref(storage, `chats/${chatId}/${Date.now()}`);
     await uploadBytes(storageRef, file);
     const imageUrl = await getDownloadURL(storageRef);
@@ -187,6 +201,8 @@ export class ChatService {
     chatId: string,
     pageSize: number = 50
   ): Promise<Message[]> {
+    if (!db) return [];
+
     const q = query(
       collection(db, 'chats', chatId, 'messages'),
       orderBy('createdAt', 'desc'),
@@ -202,6 +218,8 @@ export class ChatService {
     chatId: string,
     callback: (messages: Message[]) => void
   ): () => void {
+    if (!db) return () => {};
+
     const q = query(
       collection(db, 'chats', chatId, 'messages'),
       orderBy('createdAt', 'asc')
@@ -220,6 +238,8 @@ export class ChatService {
     userId: string,
     callback: (chats: Chat[]) => void
   ): () => void {
+    if (!db) return () => {};
+
     const q = query(
       collection(db, 'chats'),
       where('participants', 'array-contains', userId),
@@ -236,6 +256,8 @@ export class ChatService {
   }
 
   static async markAsRead(chatId: string, userId: string): Promise<void> {
+    if (!db) return;
+
     await updateDoc(doc(db, 'chats', chatId), {
       [`unreadCount.${userId}`]: 0,
     });

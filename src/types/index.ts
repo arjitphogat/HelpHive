@@ -1,7 +1,7 @@
 import { Timestamp } from 'firebase/firestore';
 
 export type UserRole = 'user' | 'host' | 'guide' | 'admin';
-export type VehicleType = 'tuk-tuk' | 'scooter' | 'bike';
+export type VehicleType = 'tuk-tuk' | 'scooter' | 'bike' | 'auto_rickshaw' | 'motorcycle';
 export type TransmissionType = 'automatic' | 'manual';
 export type FuelType = 'petrol' | 'electric' | 'cng';
 export type BookingType = 'vehicle' | 'experience';
@@ -25,6 +25,7 @@ export interface User {
   hostProfile?: HostProfile;
   guideProfile?: GuideProfile;
   stats?: UserStats;
+  hostType?: 'vehicle' | 'guide' | 'tournament' | 'experience';
 }
 
 export interface HostProfile {
@@ -54,35 +55,38 @@ export interface UserStats {
 
 export interface Vehicle {
   id: string;
-  hostId: string;
-  type: VehicleType;
+  hostId?: string;
+  hostName?: string;
+  hostVerified?: boolean;
+  type?: VehicleType | string;
   brand: string;
   model: string;
-  year: number;
-  capacity: number;
-  transmission: TransmissionType;
-  fuelType: FuelType;
-  images: string[];
-  primaryImage: string;
-  hourlyRate: number;
-  dailyRate: number;
-  weeklyRate: number;
-  minimumDuration: number;
-  address: string;
-  city: string;
-  state: string;
-  pincode: string;
+  year?: number;
+  capacity?: number;
+  transmission?: TransmissionType | string;
+  fuelType?: FuelType | string;
+  images?: string[];
+  primaryImage?: string;
+  city?: string;
+  hourlyRate?: number;
+  pricePerHour?: number;
+  pricePerDay?: number;
+  address?: string;
+  state?: string;
+  pincode?: string;
   latitude?: number;
   longitude?: number;
-  features: string[];
-  availability: VehicleAvailability;
-  status: ListingStatus;
-  isApproved: boolean;
-  rating: number;
-  totalBookings: number;
-  totalReviews: number;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  features?: string[];
+  availability?: VehicleAvailability;
+  status?: ListingStatus | string;
+  isApproved?: boolean;
+  rating?: number;
+  reviewCount?: number;
+  totalBookings?: number;
+  totalReviews?: number;
+  minimumDuration?: number;
+  createdAt?: Timestamp | any;
+  updatedAt?: Timestamp | any;
 }
 
 export interface VehicleAvailability {
@@ -114,30 +118,32 @@ export interface VehicleFormData {
 
 export interface Experience {
   id: string;
-  guideId: string;
   title: string;
-  description: string;
+  city: string;
   category: string;
-  duration: number;
-  maxParticipants: number;
-  languages: string[];
+  duration: string;
+  price: number;
+  rating: number;
+  reviewCount: number;
+  image: string;
   images: string[];
-  primaryImage: string;
-  meetingPoint: string;
-  latitude?: number;
-  longitude?: number;
-  pricePerPerson: number;
-  pricePerGroup: number;
-  includes: string[];
-  itinerary: string[];
-  availability: ExperienceAvailability;
+  hostId?: string;
+  hostName: string;
+  hostVerified: boolean;
+  description: string;
+  highlights: string[];
+  included: string[];
+  notIncluded: string[];
+  groupSize: string;
+  difficulty: string;
+  languages: string[];
+  cancellationPolicy: string;
   status: ListingStatus;
   isApproved: boolean;
-  rating: number;
   totalBookings: number;
   totalReviews: number;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
 }
 
 export interface ExperienceAvailability {

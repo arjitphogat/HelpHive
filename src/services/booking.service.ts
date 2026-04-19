@@ -27,6 +27,8 @@ export class BookingService {
     guideId: string | undefined,
     data: BookingFormData
   ): Promise<string> {
+    if (!db) throw new Error('Firebase not initialized');
+
     let baseAmount = 0;
     let serviceFee = 0;
     let taxes = 0;
@@ -39,11 +41,11 @@ export class BookingService {
         (data.endDate.getTime() - data.startDate.getTime()) / (1000 * 60 * 60)
       );
 
-      if (hours < vehicle.minimumDuration) {
-        throw new Error(`Minimum booking duration is ${vehicle.minimumDuration} hours`);
+      if (hours < (vehicle.minimumDuration ?? 1)) {
+        throw new Error(`Minimum booking duration is ${vehicle.minimumDuration ?? 1} hours`);
       }
 
-      baseAmount = hours <= 8 ? vehicle.hourlyRate * hours : vehicle.dailyRate;
+      baseAmount = hours <= 8 ? (vehicle.hourlyRate ?? 0) * hours : (vehicle.pricePerDay ?? 0);
     }
 
     serviceFee = calculateServiceFee(baseAmount);
@@ -80,6 +82,7 @@ export class BookingService {
   }
 
   static async getBooking(id: string): Promise<Booking | null> {
+    if (!db) return null;
     const bookingDoc = await getDoc(doc(db, 'bookings', id));
     if (!bookingDoc.exists()) return null;
     return { id: bookingDoc.id, ...bookingDoc.data() } as Booking;
@@ -95,6 +98,8 @@ export class BookingService {
     pageSize: number = 20,
     lastDoc?: any
   ): Promise<{ bookings: Booking[]; lastDoc: any }> {
+    if (!db) return { bookings: [], lastDoc: undefined };
+
     let q = query(collection(db, 'bookings'), orderBy('createdAt', 'desc'));
 
     if (filters?.userId) {
@@ -135,6 +140,8 @@ export class BookingService {
     userId: string,
     status?: BookingStatus
   ): Promise<Booking[]> {
+    if (!db) return [];
+
     let q = query(
       collection(db, 'bookings'),
       where('userId', '==', userId),
@@ -153,6 +160,8 @@ export class BookingService {
     hostId: string,
     status?: BookingStatus
   ): Promise<Booking[]> {
+    if (!db) return [];
+
     let q = query(
       collection(db, 'bookings'),
       where('hostId', '==', hostId),
@@ -171,6 +180,8 @@ export class BookingService {
     id: string,
     status: BookingStatus
   ): Promise<void> {
+    if (!db) throw new Error('Firebase not initialized');
+
     const updateData: Record<string, any> = {
       status,
       updatedAt: serverTimestamp(),
@@ -193,6 +204,8 @@ export class BookingService {
     paymentId?: string,
     razorpayOrderId?: string
   ): Promise<void> {
+    if (!db) throw new Error('Firebase not initialized');
+
     await updateDoc(doc(db, 'bookings', id), {
       paymentStatus,
       paymentId,
@@ -230,16 +243,14 @@ export class BookingService {
     if (!booking) throw new Error('Booking not found');
 
     await this.updateBookingStatus(id, 'completed');
-
-    if (booking.type === 'vehicle' && booking.vehicleId) {
-      await VehicleService.incrementBookingCount(booking.vehicleId);
-    }
   }
 
   static async applyCoupon(
     bookingId: string,
     discountAmount: number
   ): Promise<void> {
+    if (!db) throw new Error('Firebase not initialized');
+
     await updateDoc(doc(db, 'bookings', bookingId), {
       discount: discountAmount,
       updatedAt: serverTimestamp(),
