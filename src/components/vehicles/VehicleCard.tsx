@@ -26,7 +26,7 @@ export function VehicleCard({
 
   if (compact) {
     return (
-      <Link href={`/vehicles/${vehicle.id}`}>
+      <Link href={`/explore/vehicles/${vehicle.id}`}>
         <Card
           variant="interactive"
           padding="none"
@@ -66,7 +66,7 @@ export function VehicleCard({
   }
 
   return (
-    <Link href={`/vehicles/${vehicle.id}`}>
+    <Link href={`/explore/vehicles/${vehicle.id}`}>
       <Card
         variant="interactive"
         padding="none"
