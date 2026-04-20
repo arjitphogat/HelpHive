@@ -1,279 +1,227 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Header, Footer } from '@/components/layout';
-import { ExperienceService, Experience } from '@/services/experience.service';
-import { Card, Button, Input, Badge } from '@/components/ui';
+import { Card, Badge, Button } from '@/components/ui';
 import { formatCurrency } from '@/lib/utils';
-import { Search, SlidersHorizontal, Clock, Users, Star, X } from 'lucide-react';
+import { sampleExperiences } from '@/data/sample-data';
+import { Search, Clock, Users, Star, MapPin, Filter } from 'lucide-react';
 
 const EXPERIENCE_CATEGORIES = [
+  { value: 'all', label: 'All' },
   { value: 'cultural', label: 'Cultural' },
   { value: 'adventure', label: 'Adventure' },
-  { value: 'food', label: 'Food & Drink' },
+  { value: 'Food & Drink', label: 'Food & Drink' },
   { value: 'sightseeing', label: 'Sightseeing' },
-  { value: 'nightlife', label: 'Nightlife' },
+  { value: 'Nightlife', label: 'Nightlife' },
   { value: 'wellness', label: 'Wellness' },
-  { value: 'art', label: 'Art & Culture' },
-  { value: 'water_sports', label: 'Water Sports' },
+  { value: 'Water Sports', label: 'Water Sports' },
   { value: 'heritage', label: 'Heritage' },
-  { value: 'social_impact', label: 'Social Impact' },
+  { value: 'Social Impact', label: 'Social Impact' },
+  { value: 'Entertainment', label: 'Entertainment' },
+  { value: 'Art & Culture', label: 'Art & Culture' },
+  { value: 'City Tour', label: 'City Tour' },
 ];
 
 export default function ExploreExperiencesPage() {
-  const [experiences, setExperiences] = useState<Experience[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [experiences] = useState(sampleExperiences);
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
-  const [filters, setFilters] = useState({
-    category: '',
-    city: '',
-    maxPrice: '',
-  });
-
-  useEffect(() => {
-    loadExperiences();
-  }, [filters]);
-
-  const loadExperiences = async () => {
-    setIsLoading(true);
-    try {
-      const data = await ExperienceService.getExperiences({
-        category: filters.category || undefined,
-        city: filters.city || undefined,
-        maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
-      });
-      setExperiences(data.experiences);
-    } catch (error) {
-      console.error('Error loading experiences:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCity, setSelectedCity] = useState('all');
 
   const filteredExperiences = experiences.filter((exp) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      exp.title.toLowerCase().includes(query) ||
-      exp.description.toLowerCase().includes(query) ||
-      exp.category.toLowerCase().includes(query) ||
-      exp.city.toLowerCase().includes(query)
-    );
+    const matchesSearch = !searchQuery ||
+      exp.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      exp.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      exp.city.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesCategory = selectedCategory === 'all' ||
+      exp.category.toLowerCase() === selectedCategory.toLowerCase();
+
+    const matchesCity = selectedCity === 'all' ||
+      exp.city.toLowerCase() === selectedCity.toLowerCase();
+
+    return matchesSearch && matchesCategory && matchesCity;
   });
 
-  const clearFilters = () => {
-    setFilters({ category: '', city: '', maxPrice: '' });
-  };
-
-  const hasActiveFilters = Object.values(filters).some((v) => v !== '');
+  const cities = [...new Set(experiences.map(e => e.city))];
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-white">
       <Header />
 
       <main className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero */}
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-[var(--color-text)]">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
               Local Experiences
             </h1>
-            <p className="text-[var(--color-text-muted)] mt-2">
+            <p className="text-gray-500 mt-2">
               Discover authentic adventures with local guides
             </p>
           </div>
 
           {/* Search and Filter Bar */}
-          <Card className="mb-8">
+          <Card className="mb-8 shadow-sm border-gray-200">
             <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-muted)]" />
-                  <input
-                    type="text"
-                    placeholder="Search experiences..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-white text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] transition-all focus:outline-none focus:border-[var(--color-text)]"
-                  />
-                </div>
+              <div className="flex-1 relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search experiences..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                />
               </div>
               <Button
                 variant="outline"
                 onClick={() => setShowFilters(!showFilters)}
-                leftIcon={<SlidersHorizontal className="h-4 w-4" />}
+                leftIcon={<Filter className="h-4 w-4" />}
               >
                 Filters
               </Button>
             </div>
 
+            {/* Filters Panel */}
             {showFilters && (
               <div className="mt-4 pt-4 border-t border-gray-100">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">Category</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
                     <select
-                      value={filters.category}
-                      onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-                      className="w-full px-4 py-3 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-white text-[var(--color-text)]"
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
                     >
-                      <option value="">All categories</option>
-                      {EXPERIENCE_CATEGORIES.map((c) => (
-                        <option key={c.value} value={c.value}>{c.label}</option>
+                      {EXPERIENCE_CATEGORIES.map((cat) => (
+                        <option key={cat.value} value={cat.value}>{cat.label}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">City</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">City</label>
                     <select
-                      value={filters.city}
-                      onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-                      className="w-full px-4 py-3 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-white text-[var(--color-text)]"
+                      value={selectedCity}
+                      onChange={(e) => setSelectedCity(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
                     >
-                      <option value="">All cities</option>
-                      <option value="Goa">Goa</option>
-                      <option value="Jaipur">Jaipur</option>
-                      <option value="Delhi">Delhi</option>
-                      <option value="Mumbai">Mumbai</option>
-                      <option value="Bangalore">Bangalore</option>
-                      <option value="Udaipur">Udaipur</option>
+                      <option value="all">All Cities</option>
+                      {cities.map((city) => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">Max Price (₹)</label>
-                    <input
-                      type="number"
-                      placeholder="Any"
-                      value={filters.maxPrice}
-                      onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
-                      className="w-full px-4 py-3 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-white text-[var(--color-text)]"
-                    />
-                  </div>
                 </div>
-                {hasActiveFilters && (
-                  <div className="mt-4 flex justify-end">
-                    <Button variant="ghost" size="sm" onClick={clearFilters}>
-                      <X className="h-4 w-4 mr-1" />
-                      Clear Filters
-                    </Button>
-                  </div>
-                )}
               </div>
             )}
-          </Card>
 
-          {/* Categories Pills */}
-          <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
-            {EXPERIENCE_CATEGORIES.map((category) => (
-              <button
-                key={category.value}
-                onClick={() => setFilters({ ...filters, category: category.value === filters.category ? '' : category.value })}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                  filters.category === category.value
-                    ? 'bg-[var(--color-primary)] text-white'
-                    : 'bg-white text-[var(--color-text)] border border-gray-200 hover:border-[var(--color-primary)]'
-                }`}
-              >
-                {category.label}
-              </button>
-            ))}
-          </div>
+            {/* Category Pills */}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {EXPERIENCE_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.value}
+                  onClick={() => setSelectedCategory(cat.value)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    selectedCategory === cat.value
+                      ? 'bg-pink-500 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </Card>
 
           {/* Results */}
           <div className="mb-4">
-            <p className="text-sm text-[var(--color-text-muted)]">
-              {isLoading ? 'Loading...' : `${filteredExperiences.length} experiences found`}
+            <p className="text-sm text-gray-500">
+              {filteredExperiences.length} experiences found
             </p>
           </div>
 
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                  <div className="h-48 bg-gray-200 animate-shimmer" />
-                  <div className="p-4 space-y-3">
-                    <div className="h-5 bg-gray-200 rounded animate-shimmer w-3/4" />
-                    <div className="h-4 bg-gray-200 rounded animate-shimmer w-1/2" />
-                    <div className="flex justify-between">
-                      <div className="h-4 bg-gray-200 rounded animate-shimmer w-20" />
-                      <div className="h-4 bg-gray-200 rounded animate-shimmer w-16" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : filteredExperiences.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-lg font-semibold text-[var(--color-text)]">No experiences found</h3>
-              <p className="text-[var(--color-text-muted)] mt-2">Try adjusting your search or filters</p>
-              {hasActiveFilters && (
-                <Button variant="outline" className="mt-4" onClick={clearFilters}>
-                  Clear Filters
-                </Button>
-              )}
+          {filteredExperiences.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                <Search className="w-10 h-10 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No experiences found</h3>
+              <p className="text-gray-500 mb-4">Try adjusting your search or filters</p>
+              <Button variant="outline" onClick={() => {
+                setSearchQuery('');
+                setSelectedCategory('all');
+                setSelectedCity('all');
+              }}>
+                Clear Filters
+              </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredExperiences.map((experience) => (
-                <Link key={experience.id} href={`/experiences/${experience.id}`}>
-                  <div className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-[var(--shadow-card-hover)] transition-shadow cursor-pointer h-full flex flex-col">
-                    <div className="relative h-48">
+              {filteredExperiences.map((exp) => (
+                <Link key={exp.id} href={`/explore/experiences/${exp.id}`}>
+                  <div className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 group h-full flex flex-col">
+                    <div className="relative h-48 overflow-hidden">
                       <Image
-                        src={experience.image || '/placeholder-experience.jpg'}
-                        alt={experience.title}
+                        src={exp.image}
+                        alt={exp.title}
                         fill
-                        className="object-cover"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      <Badge className="absolute left-3 top-3 bg-white text-[var(--color-text)]">
-                        {EXPERIENCE_CATEGORIES.find((c) => c.value === experience.category)?.label || experience.category}
-                      </Badge>
-                      {experience.hostVerified && (
-                        <div className="absolute right-3 top-3 bg-[var(--color-success)] text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                          Verified
-                        </div>
-                      )}
+                      <div className="absolute left-3 top-3">
+                        <Badge className="bg-white/90 backdrop-blur-sm">
+                          {exp.category}
+                        </Badge>
+                      </div>
+                      <div className="absolute right-3 top-3 flex items-center gap-1 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-medium text-sm">{exp.rating.toFixed(1)}</span>
+                        <span className="text-xs text-gray-500">({exp.reviewCount})</span>
+                      </div>
                     </div>
+
                     <div className="p-4 flex-1 flex flex-col">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm text-[var(--color-text-muted)]">{experience.city}</span>
+                      <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                        <MapPin className="h-4 w-4" />
+                        {exp.city}
                       </div>
-                      <h3 className="font-semibold text-lg text-[var(--color-text)] line-clamp-1">
-                        {experience.title}
+
+                      <h3 className="font-semibold text-lg text-gray-900 mb-2">
+                        {exp.title}
                       </h3>
-                      <p className="text-sm text-[var(--color-text-muted)] mt-1 line-clamp-2 flex-1">
-                        {experience.description}
+
+                      <p className="text-sm text-gray-500 line-clamp-2 mb-4 flex-1">
+                        {exp.description}
                       </p>
-                      <div className="mt-3 flex flex-wrap gap-3 text-sm text-[var(--color-text-muted)]">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {experience.duration}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {experience.groupSize}
-                        </span>
+
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {exp.highlights.slice(0, 3).map((highlight, i) => (
+                          <span key={i} className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
+                            {highlight}
+                          </span>
+                        ))}
                       </div>
-                      <div className="mt-4 flex items-end justify-between border-t border-gray-100 pt-3">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-[var(--color-primary)] text-[var(--color-primary)]" />
-                          <span className="font-medium">{experience.rating.toFixed(1)}</span>
-                          <span className="text-sm text-[var(--color-text-muted)]">
-                            ({experience.reviewCount})
+
+                      <div className="flex items-center justify-between border-t border-gray-100 pt-3">
+                        <div className="flex items-center gap-3 text-sm text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {exp.duration}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            {exp.groupSize.replace('Up to ', '').replace(' people', '')}
                           </span>
                         </div>
-                        <div>
-                          <span className="text-xl font-bold text-[var(--color-primary)]">
-                            ₹{experience.price.toLocaleString()}
+                        <div className="text-right">
+                          <span className="text-xl font-bold text-pink-500">
+                            {formatCurrency(exp.price)}
                           </span>
-                          <span className="text-sm text-[var(--color-text-muted)]">/person</span>
+                          <span className="text-sm text-gray-400">/person</span>
                         </div>
                       </div>
                     </div>
