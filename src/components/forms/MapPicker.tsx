@@ -24,9 +24,10 @@ interface PlaceResult {
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare global {
   interface Window {
-    google: typeof google;
+    google: any;
     initGoogleMaps: () => void;
   }
 }
@@ -66,7 +67,7 @@ export function MapPicker({
         const autocompleteService = new window.google.maps.places.AutocompleteService();
         autocompleteService.getPlacePredictions(
           { input: query, types: ['address'] },
-          (predictions: google.maps.places.AutocompletePrediction[] | null) => {
+          (predictions: any[] | null) => {
             if (predictions) {
               setPredictions(
                 predictions.map((p) => ({
@@ -112,7 +113,7 @@ export function MapPicker({
 
       placesService.getDetails(
         { placeId: prediction.place_id, fields: ['geometry', 'formatted_address'] },
-        (place: google.maps.places.Place | null) => {
+        (place: any) => {
           if (place?.geometry?.location) {
             onChange({
               lat: place.geometry.location.lat(),

@@ -21,8 +21,8 @@ export default function ExperienceDetailPage() {
     const fetchExperience = async () => {
       setIsLoading(true);
       try {
-        const { experienceService } = await import('@/services/experience.service');
-        const data = await experienceService.getExperienceById(experienceId);
+        const { ExperienceService } = await import('@/services/experience.service');
+        const data = await ExperienceService.getExperience(experienceId);
         setExperience(data);
       } catch (error) {
         console.error('Error fetching experience:', error);

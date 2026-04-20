@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { ChevronLeft, ChevronRight, Check, Globe, MapPin, FileText } from 'lucide-react';
 import { Button, Card, Input, Textarea, Select } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const guideSchema = z.object({
   displayName: z.string().min(2, 'Name is required'),
@@ -59,6 +60,7 @@ const experienceLevels = [
 
 export default function GuideOnboardingPage() {
   const router = useRouter();
+  const { userProfile } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -127,8 +129,23 @@ export default function GuideOnboardingPage() {
   const onSubmit = async (data: GuideFormData) => {
     setIsSubmitting(true);
     try {
-      const { authService } = await import('@/services/auth.service');
-      await authService.updateGuideProfile(data);
+      if (!userProfile?.id) throw new Error('User not authenticated');
+
+      const guideData = {
+        role: 'guide' as const,
+        displayName: data.displayName,
+        guideProfile: {
+          isApproved: false,
+          bio: data.bio,
+          languages: data.languages,
+          categories: data.categories,
+          tours: [],
+          rating: 0,
+        },
+      };
+
+      const { AuthService } = await import('@/services/auth.service');
+      await AuthService.updateUserProfile(userProfile.id, guideData);
 
       router.push('/dashboard/guide?success=true');
     } catch (error) {
@@ -302,7 +319,6 @@ export default function GuideOnboardingPage() {
                 {...register('city')}
                 error={errors.city?.message}
                 placeholder="e.g., Mumbai, Delhi, Jaipur"
-                icon={<MapPin className="h-4 w-4" />}
               />
 
               <div className="p-4 bg-gray-50 rounded-lg flex items-start gap-3">

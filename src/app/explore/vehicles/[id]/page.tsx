@@ -22,8 +22,8 @@ export default function VehicleDetailPage() {
     const fetchVehicle = async () => {
       setIsLoading(true);
       try {
-        const { vehicleService } = await import('@/services/vehicle.service');
-        const data = await vehicleService.getVehicleById(vehicleId);
+        const { VehicleService } = await import('@/services/vehicle.service');
+        const data = await VehicleService.getVehicle(vehicleId);
         setVehicle(data);
       } catch (error) {
         console.error('Error fetching vehicle:', error);

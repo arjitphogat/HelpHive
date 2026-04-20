@@ -9,12 +9,13 @@ import { ChevronLeft, ChevronRight, Upload, X, MapPin, Check } from 'lucide-reac
 import { Button, Card, Input, Select } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { VEHICLE_TYPES } from '@/constants';
+import { useAuth } from '@/contexts/AuthContext';
 
 const vehicleSchema = z.object({
   type: z.string().min(1, 'Vehicle type is required'),
   brand: z.string().min(1, 'Brand is required'),
   model: z.string().min(1, 'Model is required'),
-  year: z.number().min.max(new Date().getFullYear()),
+  year: z.number().min(1).max(new Date().getFullYear()),
   capacity: z.number().min(1).max(20),
   transmission: z.string().min(1, 'Transmission is required'),
   fuelType: z.string().min(1, 'Fuel type is required'),
@@ -52,6 +53,7 @@ const featureOptions = [
 
 export default function NewVehiclePage() {
   const router = useRouter();
+  const { userProfile } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [images, setImages] = useState<string[]>([]);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
@@ -124,14 +126,16 @@ export default function NewVehiclePage() {
   const onSubmit = async (data: VehicleFormData) => {
     setIsSubmitting(true);
     try {
+      if (!userProfile?.id) throw new Error('User not authenticated');
+
       const vehicleData = {
         ...data,
         images,
         features: selectedFeatures,
       };
 
-      const { vehicleService } = await import('@/services/vehicle.service');
-      await vehicleService.createVehicle(vehicleData as any);
+      const { VehicleService } = await import('@/services/vehicle.service');
+      await VehicleService.createVehicle(userProfile.id, vehicleData as any);
 
       router.push('/dashboard/host?success=true');
     } catch (error) {

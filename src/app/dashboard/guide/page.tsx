@@ -29,17 +29,17 @@ interface Booking {
 }
 
 export default function GuideDashboardPage() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { userProfile, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && (!user || (user.role !== 'guide' && user.role !== 'admin'))) {
+    if (!authLoading && (!userProfile || (userProfile.role !== 'guide' && userProfile.role !== 'admin'))) {
       router.push('/auth/login');
     } else if (!authLoading) {
       setIsLoading(false);
     }
-  }, [user, authLoading, router]);
+  }, [userProfile, authLoading, router]);
 
   const stats = {
     totalBookings: 24,
@@ -223,7 +223,7 @@ export default function GuideDashboardPage() {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-[var(--color-text)]">{booking.experienceTitle}</h3>
                       <p className="text-sm text-[var(--color-text-muted)]">
-                        {booking.userName} • {booking.participants} participants • {booking.date.toLocaleDateString()}
+                        {booking.userName} - {booking.participants} participants - {booking.date.toLocaleDateString()}
                       </p>
                     </div>
                     <div className="text-right">
@@ -247,11 +247,11 @@ export default function GuideDashboardPage() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="h-16 w-16 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white text-xl font-bold">
-                    {user?.displayName?.charAt(0).toUpperCase() || 'G'}
+                    {userProfile?.displayName?.charAt(0).toUpperCase() || 'G'}
                   </div>
                   <div>
-                    <p className="font-medium text-[var(--color-text)]">{user?.displayName || 'Guide'}</p>
-                    <p className="text-sm text-[var(--color-text-muted)]">{user?.email}</p>
+                    <p className="font-medium text-[var(--color-text)]">{userProfile?.displayName || 'Guide'}</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">{userProfile?.email}</p>
                   </div>
                 </div>
 

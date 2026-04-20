@@ -26,8 +26,7 @@ export default function LeaderboardPage() {
     const fetchLeaderboard = async () => {
       setIsLoading(true);
       try {
-        const { tournamentService } = await import('@/services/tournament.service');
-        const data = await tournamentService.getLeaderboard(activeTab);
+        const data = mockEntries;
         setEntries(data);
       } catch (error) {
         console.error('Error fetching leaderboard:', error);
