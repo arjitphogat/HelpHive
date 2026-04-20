@@ -3,28 +3,28 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components/layout';
-import { Trophy, Medal, Calendar, Users, Gift, MapPin, Clock, ChevronRight, TrendingUp, Star, Zap } from 'lucide-react';
+import { Button, Input } from '@/components/ui';
+import { Trophy, Medal, Calendar, Users, Gift, MapPin, Clock, ChevronRight, TrendingUp, Star, Zap, X, Loader2, Check } from 'lucide-react';
 
-// Test data for tournaments
 const activeTournaments = [
   {
-    id: 1,
-    title: 'Beach Run Championship',
-    city: 'Goa',
+    id: 'beach-run-2024',
+    title: 'Community Help Challenge',
+    city: 'Mumbai',
     prize: '₹25,000',
     participants: 89,
     daysLeft: 3,
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=500&fit=crop',
+    image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&h=500&fit=crop',
     badge: '🔥 Hot',
     status: 'live',
-    type: 'Speed Challenge',
-    description: 'Race along the beautiful beaches of North Goa',
-    rules: ['Complete 10 beach checkpoints', '拍照打卡', 'Share your journey'],
-    rewards: ['1st: ₹10,000', '2nd: ₹5,000', '3rd: ₹2,500', 'All participants: Hive Coins'],
+    type: 'Service Challenge',
+    description: 'Help the most community members this month',
+    rules: ['Complete 10 help requests', 'Get positive reviews', 'Share your journey'],
+    rewards: ['1st: ₹10,000', '2nd: ₹5,000', '3rd: ₹2,500', 'All: Hive Coins'],
   },
   {
-    id: 2,
-    title: 'Heritage Trail Challenge',
+    id: 'heritage-trail-2024',
+    title: 'Local Guide Master',
     city: 'Jaipur',
     prize: '₹30,000',
     participants: 124,
@@ -32,99 +32,169 @@ const activeTournaments = [
     image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800&h=500&fit=crop',
     badge: '🎉 New',
     status: 'live',
-    type: 'Exploration',
-    description: 'Discover the hidden gems of the Pink City',
-    rules: ['Visit 15 heritage sites', 'Collect stamps', 'Share stories'],
-    rewards: ['1st: ₹15,000', '2nd: ₹8,000', '3rd: ₹4,000', 'Bonus: Heritage Badge'],
+    type: 'Tours',
+    description: 'Guide tourists through the Pink City',
+    rules: ['Complete 15 tours', 'Collect reviews', 'Share stories'],
+    rewards: ['1st: ₹15,000', '2nd: ₹8,000', '3rd: ₹4,000', 'Bonus: Guide Badge'],
   },
   {
-    id: 3,
-    title: 'Mountain Explorer Cup',
-    city: 'Manali',
+    id: 'mountain-explorer-2024',
+    title: 'Tech Support Champion',
+    city: 'Bangalore',
     prize: '₹40,000',
     participants: 67,
     daysLeft: 12,
-    image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800&h=500&fit=crop',
-    badge: '⛰️ Adventure',
+    image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=500&fit=crop',
+    badge: '⛰️ Tech',
     status: 'upcoming',
-    type: 'Endurance',
-    description: 'Conquer the mountain passes and scenic routes',
-    rules: ['Complete 200km route', 'Photo checkpoints', 'Safe driving'],
-    rewards: ['1st: ₹20,000', '2nd: ₹10,000', '3rd: ₹5,000', 'Top 10: Free upgrades'],
+    type: 'Support',
+    description: 'Help others with tech issues and problems',
+    rules: ['Solve 20 tech issues', 'Video check-ins', 'Expert support'],
+    rewards: ['1st: ₹20,000', '2nd: ₹10,000', '3rd: ₹5,000', 'Top 10: Badges'],
   },
   {
-    id: 4,
-    title: 'Sunset Ride Challenge',
-    city: 'Pondicherry',
+    id: 'sunset-challenge-2024',
+    title: 'Cleaning Queen/King',
+    city: 'Delhi',
     prize: '₹15,000',
     participants: 56,
     daysLeft: 7,
-    image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=800&h=500&fit=crop',
-    badge: '🌅 Popular',
+    image: 'https://images.unsplash.com/photo-1581578731548-c64649cc085f?w=800&h=500&fit=crop',
+    badge: '🌟 Popular',
     status: 'live',
-    type: 'Photo Challenge',
-    description: 'Capture the most stunning sunset moments',
-    rules: ['Best sunset photos', 'Most likes', 'Creative content'],
+    type: 'Home Help',
+    description: 'Provide the best cleaning services',
+    rules: ['Best service photos', 'Most clients', '5-star reviews'],
     rewards: ['1st: ₹5,000', '2nd: ₹3,000', '3rd: ₹2,000', 'Top 20: 500 Hive Coins'],
   },
   {
-    id: 5,
-    title: 'Food Trail Championship',
-    city: 'Delhi',
+    id: 'food-trail-2024',
+    title: 'Tutoring Excellence',
+    city: 'Pune',
     prize: '₹35,000',
     participants: 156,
     daysLeft: 2,
-    image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=800&h=500&fit=crop',
-    badge: '🍛 Must Join',
+    image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&h=500&fit=crop',
+    badge: '📚 Must Join',
     status: 'live',
-    type: 'Food Trail',
-    description: 'Explore the best street food in Old Delhi',
-    rules: ['Visit 10 food spots', 'Review each place', 'Best vlog wins'],
-    rewards: ['1st: ₹15,000', '2nd: ₹8,000', '3rd: ₹5,000', 'All: Food Explorer Badge'],
+    type: 'Education',
+    description: 'Help students excel in their studies',
+    rules: ['Help 10 students', 'Track progress', 'Best results'],
+    rewards: ['1st: ₹15,000', '2nd: ₹8,000', '3rd: ₹5,000', 'All: Tutor Badge'],
   },
   {
-    id: 6,
-    title: 'River Rafting League',
-    city: 'Rishikesh',
+    id: 'delivery-league-2024',
+    title: 'Delivery Hero',
+    city: 'Hyderabad',
     prize: '₹20,000',
     participants: 45,
     daysLeft: 14,
-    image: 'https://images.unsplash.com/photo-1600100195362-63369f3d0e5a?w=800&h=500&fit=crop',
-    badge: '🏄 Thrilling',
+    image: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=800&h=500&fit=crop',
+    badge: '🚚 Fast',
     status: 'upcoming',
-    type: 'Adventure',
-    description: 'The ultimate river adventure tournament',
-    rules: ['Complete 5 rapids', 'Safety first', 'Team or solo'],
+    type: 'Delivery',
+    description: 'Complete deliveries with 5-star ratings',
+    rules: ['Complete 50 deliveries', '100% rating', 'On-time'],
     rewards: ['1st: ₹8,000', '2nd: ₹5,000', '3rd: ₹3,000', 'Safety Badge'],
   },
 ];
 
 const leaderboard = [
-  { rank: 1, name: 'Priya S.', city: 'Goa', points: 2450, rides: 89, avatar: 'PS', badge: 'Crown', trend: '+120' },
+  { rank: 1, name: 'Priya S.', city: 'Mumbai', points: 2450, rides: 89, avatar: 'PS', badge: 'Crown', trend: '+120' },
   { rank: 2, name: 'Rahul M.', city: 'Jaipur', points: 2180, rides: 76, avatar: 'RM', badge: 'Trophy', trend: '+95' },
   { rank: 3, name: 'Aisha K.', city: 'Delhi', points: 1950, rides: 67, avatar: 'AK', badge: 'Star', trend: '+80' },
-  { rank: 4, name: 'Vikram R.', city: 'Mumbai', points: 1820, rides: 58, avatar: 'VR', badge: null, trend: '+65' },
-  { rank: 5, name: 'Sneha P.', city: 'Rishikesh', points: 1690, rides: 52, avatar: 'SP', badge: null, trend: '+45' },
-  { rank: 6, name: 'Arjun N.', city: 'Goa', points: 1580, rides: 48, avatar: 'AN', badge: null, trend: '+30' },
-  { rank: 7, name: 'Meera K.', city: 'Jaipur', points: 1420, rides: 41, avatar: 'MK', badge: null, trend: '+25' },
+  { rank: 4, name: 'Vikram R.', city: 'Bangalore', points: 1820, rides: 58, avatar: 'VR', badge: null, trend: '+65' },
+  { rank: 5, name: 'Sneha P.', city: 'Pune', points: 1690, rides: 52, avatar: 'SP', badge: null, trend: '+45' },
+  { rank: 6, name: 'Arjun N.', city: 'Hyderabad', points: 1580, rides: 48, avatar: 'AN', badge: null, trend: '+30' },
+  { rank: 7, name: 'Meera K.', city: 'Mumbai', points: 1420, rides: 41, avatar: 'MK', badge: null, trend: '+25' },
   { rank: 8, name: 'Ravi S.', city: 'Delhi', points: 1350, rides: 38, avatar: 'RS', badge: null, trend: '+15' },
 ];
 
 const pastWinners = [
-  { name: 'Carlos D.', city: 'Goa', tournament: 'Beach Run S1', prize: '₹10,000', avatar: 'CD', date: 'Mar 2024' },
-  { name: 'Priya N.', city: 'Jaipur', tournament: 'Heritage Trail', prize: '₹15,000', avatar: 'PN', date: 'Feb 2024' },
-  { name: 'Amit K.', city: 'Delhi', tournament: 'Food Trail Cup', prize: '₹12,000', avatar: 'AK', date: 'Jan 2024' },
+  { name: 'Carlos D.', city: 'Mumbai', tournament: 'Help Champion S1', prize: '₹10,000', avatar: 'CD', date: 'Mar 2024' },
+  { name: 'Priya N.', city: 'Jaipur', tournament: 'Local Guide', prize: '₹15,000', avatar: 'PN', date: 'Feb 2024' },
+  { name: 'Amit K.', city: 'Delhi', tournament: 'Tech Support Cup', prize: '₹12,000', avatar: 'AK', date: 'Jan 2024' },
 ];
+
+interface JoinFormData {
+  displayName: string;
+  email: string;
+  phone: string;
+  city: string;
+  serviceType: string;
+}
 
 export default function TournamentPage() {
   const [activeTab, setActiveTab] = useState<'active' | 'upcoming' | 'leaderboard'>('active');
-  const [showJoinModal, setShowJoinModal] = useState<number | null>(null);
+  const [showJoinModal, setShowJoinModal] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [formData, setFormData] = useState<JoinFormData>({
+    displayName: '',
+    email: '',
+    phone: '',
+    city: '',
+    serviceType: 'repairs',
+  });
 
   const filteredTournaments = activeTournaments.filter(t => {
     if (activeTab === 'active') return t.status === 'live';
     if (activeTab === 'upcoming') return t.status === 'upcoming';
     return true;
   });
+
+  const handleJoinTournament = async (tournamentId: string) => {
+    if (!formData.displayName || !formData.email || !formData.phone || !formData.city) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSuccessMessage('');
+
+    try {
+      const response = await fetch('/api/tournaments/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tournamentId,
+          uid: `user_${Date.now()}`,
+          displayName: formData.displayName,
+          email: formData.email,
+          phone: formData.phone,
+          city: formData.city,
+          vehicleType: formData.serviceType,
+          termsAccepted: true,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSuccessMessage('Successfully registered! Check your email for confirmation.');
+        setTimeout(() => {
+          setShowJoinModal(null);
+          setSuccessMessage('');
+          setFormData({
+            displayName: '',
+            email: '',
+            phone: '',
+            city: '',
+            serviceType: 'repairs',
+          });
+        }, 3000);
+      } else {
+        alert(data.error || 'Failed to register. Please try again.');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      alert('An error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const selectedTournament = activeTournaments.find(t => t.id === showJoinModal);
 
   return (
     <div className="min-h-screen bg-white">
@@ -135,18 +205,16 @@ export default function TournamentPage() {
         <section className="relative bg-gradient-to-r from-[#FF385C] to-[#FF5A5F] py-12 lg:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-              {/* Left Content */}
               <div className="text-white text-center lg:text-left">
                 <div className="flex items-center justify-center lg:justify-start gap-2 mb-4">
                   <Trophy className="h-8 w-8" />
                   <h1 className="text-3xl lg:text-5xl font-bold">Tournaments</h1>
                 </div>
                 <p className="text-lg text-white/80 max-w-xl">
-                  Compete with riders across India. Win prizes, earn Hive Coins, and climb the leaderboard!
+                  Compete with helpers across India. Win prizes, earn Hive Coins, and climb the leaderboard!
                 </p>
               </div>
 
-              {/* Stats */}
               <div className="flex gap-6">
                 <div className="text-center">
                   <p className="text-3xl font-bold text-white">₹10L+</p>
@@ -198,7 +266,6 @@ export default function TournamentPage() {
         {/* Content */}
         <section className="py-8 lg:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Tournament Cards */}
             {activeTab !== 'leaderboard' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredTournaments.map((tournament, index) => (
@@ -207,7 +274,6 @@ export default function TournamentPage() {
                     className="card animate-fade-in-up group"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                    {/* Image */}
                     <div className="relative aspect-[16/10] img-zoom">
                       <img
                         src={tournament.image}
@@ -216,14 +282,12 @@ export default function TournamentPage() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
-                      {/* Badge */}
                       <div className="absolute top-3 left-3">
                         <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-semibold">
                           {tournament.badge}
                         </span>
                       </div>
 
-                      {/* Status */}
                       <div className="absolute top-3 right-3">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                           tournament.status === 'live'
@@ -234,7 +298,6 @@ export default function TournamentPage() {
                         </span>
                       </div>
 
-                      {/* Content Overlay */}
                       <div className="absolute bottom-0 left-0 right-0 p-4">
                         <h3 className="text-lg font-bold text-white mb-1">{tournament.title}</h3>
                         <div className="flex items-center gap-3 text-white/80 text-sm">
@@ -250,11 +313,9 @@ export default function TournamentPage() {
                       </div>
                     </div>
 
-                    {/* Card Body */}
                     <div className="p-4">
                       <p className="text-sm text-[var(--color-text-secondary)] mb-4">{tournament.description}</p>
 
-                      {/* Stats Row */}
                       <div className="flex items-center justify-between mb-4 pb-4 border-b border-[var(--color-border-light)]">
                         <div className="flex items-center gap-4">
                           <div className="flex items-center gap-1 text-sm">
@@ -271,23 +332,20 @@ export default function TournamentPage() {
                         </span>
                       </div>
 
-                      {/* CTA */}
-                      <button
+                      <Button
                         onClick={() => setShowJoinModal(tournament.id)}
-                        className="w-full py-3 bg-[var(--color-primary)] text-white rounded-[var(--radius-md)] font-semibold text-sm hover:opacity-90 transition"
+                        className="w-full"
                       >
                         {tournament.status === 'live' ? 'Join Tournament' : 'Notify Me'}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Leaderboard */}
             {activeTab === 'leaderboard' && (
               <div className="max-w-4xl mx-auto">
-                {/* Top 3 Podium */}
                 <div className="grid grid-cols-3 gap-4 mb-8">
                   {[1, 0, 2].map((index) => {
                     const entry = leaderboard[index];
@@ -303,7 +361,6 @@ export default function TournamentPage() {
                             : 'bg-gradient-to-b from-[#CD7F32]/20 to-transparent'
                         }`}
                       >
-                        {/* Avatar with Badge */}
                         <div className="relative inline-block mb-3">
                           <div className={`w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold ${
                             entry.rank === 1
@@ -328,7 +385,6 @@ export default function TournamentPage() {
                   })}
                 </div>
 
-                {/* Rest of Leaderboard */}
                 <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--color-border-light)] overflow-hidden">
                   {leaderboard.slice(3).map((entry, index) => (
                     <div
@@ -345,7 +401,7 @@ export default function TournamentPage() {
                       </div>
                       <div className="flex-1">
                         <p className="font-semibold text-[var(--color-text)]">{entry.name}</p>
-                        <p className="text-sm text-[var(--color-text-secondary)]">{entry.city} • {entry.rides} rides</p>
+                        <p className="text-sm text-[var(--color-text-secondary)]">{entry.city} • {entry.rides} helps</p>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
@@ -401,7 +457,7 @@ export default function TournamentPage() {
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { icon: Zap, title: 'Earn Points', desc: 'Complete challenges & rides' },
+                { icon: Zap, title: 'Earn Points', desc: 'Complete challenges & helps' },
                 { icon: Medal, title: 'Win Prizes', desc: 'Cash & Hive Coins' },
                 { icon: Star, title: 'Unlock Badges', desc: 'Exclusive profile badges' },
                 { icon: Trophy, title: 'Get Featured', desc: 'Top players highlighted' },
@@ -420,6 +476,120 @@ export default function TournamentPage() {
       </main>
 
       <Footer />
+
+      {/* Join Tournament Modal */}
+      {showJoinModal && selectedTournament && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[var(--radius-xl)] max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-[var(--color-text)]">Join {selectedTournament.title}</h2>
+                <button
+                  onClick={() => setShowJoinModal(null)}
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {successMessage ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--color-success)]/10 flex items-center justify-center">
+                    <Check className="h-8 w-8 text-[var(--color-success)]" />
+                  </div>
+                  <h3 className="text-lg font-bold text-[var(--color-text)] mb-2">Registration Complete!</h3>
+                  <p className="text-[var(--color-text-secondary)]">{successMessage}</p>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-6 p-4 bg-[var(--color-surface-muted)] rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Gift className="h-5 w-5 text-[var(--color-primary)]" />
+                      <span className="font-semibold">{selectedTournament.prize} Prize Pool</span>
+                    </div>
+                    <p className="text-sm text-[var(--color-text-secondary)]">{selectedTournament.description}</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Input
+                      label="Full Name"
+                      value={formData.displayName}
+                      onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                      placeholder="Enter your full name"
+                      required
+                    />
+                    <Input
+                      label="Email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      placeholder="Enter your email"
+                      required
+                    />
+                    <Input
+                      label="Phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="Enter your phone number"
+                      required
+                    />
+                    <Input
+                      label="City"
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      placeholder="Enter your city"
+                      required
+                    />
+
+                    <div>
+                      <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                        Service Type
+                      </label>
+                      <select
+                        value={formData.serviceType}
+                        onChange={(e) => setFormData({ ...formData, serviceType: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      >
+                        <option value="repairs">Repairs & Maintenance</option>
+                        <option value="cleaning">Cleaning Services</option>
+                        <option value="tutoring">Tutoring & Education</option>
+                        <option value="delivery">Delivery & Logistics</option>
+                        <option value="tech">Tech Support</option>
+                        <option value="other">Other Services</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowJoinModal(null)}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => handleJoinTournament(selectedTournament.id)}
+                      className="flex-1"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Registering...
+                        </>
+                      ) : (
+                        'Join Now'
+                      )}
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-[var(--color-border-light)] md:hidden z-40">

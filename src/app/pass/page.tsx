@@ -1,20 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components/layout';
 import { Button } from '@/components/ui';
-import { Check, Sparkles, Crown, Shield, Zap, Gift, Award } from 'lucide-react';
+import { Check, Sparkles, Crown, Shield, Zap, Gift, Award, Loader2 } from 'lucide-react';
 
 const plans = [
   {
-    name: 'Free',
-    price: 0,
-    period: 'forever',
-    description: 'Basic access to all features',
+    id: 'helphive-pass',
+    name: 'HelpHive Pass',
+    price: 199,
+    period: 'month',
+    description: 'For frequent helpers',
     features: [
-      'Browse all vehicles & experiences',
-      'Book rentals & tours',
+      'Browse all services & experiences',
+      'Book help & tours',
       'Join tournaments',
       'Basic support',
       'Standard checkout',
@@ -26,29 +27,11 @@ const plans = [
       'Exclusive events',
       'Reward multipliers',
     ],
-    cta: 'Get Started',
+    cta: 'Start Free Trial',
     popular: false,
   },
   {
-    name: 'HelpHive Pass',
-    price: 199,
-    period: 'month',
-    description: 'For frequent explorers',
-    features: [
-      'Everything in Free',
-      '0% booking fees',
-      'Priority 24/7 support',
-      '10% tournament discount',
-      'Access to exclusive events',
-      'Early access to new cities',
-      '1.5x reward multiplier',
-      'Free upgrades on bookings',
-    ],
-    notIncluded: [],
-    cta: 'Start Free Trial',
-    popular: true,
-  },
-  {
+    id: 'explorer-elite',
     name: 'Explorer Elite',
     price: 499,
     period: 'month',
@@ -64,7 +47,41 @@ const plans = [
       'Advanced analytics',
     ],
     notIncluded: [],
-    cta: 'Contact Sales',
+    cta: 'Get Started',
+    popular: true,
+  },
+  {
+    id: 'helphive-pass-yearly',
+    name: 'HelpHive Pass Yearly',
+    price: 1908,
+    period: 'year',
+    description: 'Save 20% with yearly',
+    features: [
+      'Everything in monthly Pass',
+      '2 months free',
+      'Priority 24/7 support',
+      '10% tournament discount',
+      '1.5x reward multiplier',
+    ],
+    notIncluded: [],
+    cta: 'Subscribe Yearly',
+    popular: false,
+  },
+  {
+    id: 'explorer-elite-yearly',
+    name: 'Explorer Elite Yearly',
+    price: 4790,
+    period: 'year',
+    description: 'Save 20% with yearly',
+    features: [
+      'Everything in monthly Elite',
+      '2 months free',
+      '15% tournament discount',
+      '2x reward multiplier',
+      'VIP event access',
+    ],
+    notIncluded: [],
+    cta: 'Subscribe Yearly',
     popular: false,
   },
 ];
@@ -80,7 +97,96 @@ const benefits = [
 
 export default function HelpHivePassPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-  const yearlyDiscount = 20; // 2 months free
+  const [purchasingPlan, setPurchasingPlan] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const yearlyDiscount = 20;
+
+  useEffect(() => {
+    // Check for user session (from Firebase auth)
+    const checkUser = async () => {
+      // This would integrate with Firebase auth
+      // For now, we'll just check localStorage or context
+    };
+    checkUser();
+  }, []);
+
+  const handlePurchase = async (plan: typeof plans[0]) => {
+    if (plan.price === 0) {
+      alert('This plan is free! You already have access.');
+      return;
+    }
+
+    setPurchasingPlan(plan.id);
+
+    try {
+      // Create order
+      const response = await fetch('/api/membership', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planId: plan.id,
+          userId: 'demo-user', // Would come from auth
+          billing: billingCycle,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        if (data.demo) {
+          // Demo mode - show success
+          alert(`Demo Mode: ${plan.name} subscription created!\nPrice: ₹${data.amount}`);
+        } else if (data.orderId) {
+          // Real Razorpay checkout
+          const options = {
+            key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+            amount: data.amount,
+            currency: data.currency,
+            name: 'Helphive',
+            description: `${plan.name} Subscription`,
+            order_id: data.orderId,
+            prefill: {
+              name: user?.displayName || 'User',
+              email: user?.email || '',
+            },
+            handler: async (response: any) => {
+              // Update membership status
+              await fetch('/api/membership', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  receipt: `membership_${plan.id}_${Date.now()}`,
+                  paymentId: response.razorpay_payment_id,
+                  status: 'captured',
+                }),
+              });
+              alert('Payment successful! Your membership is now active.');
+            },
+          };
+
+          const Razorpay = (window as any).Razorpay;
+          if (Razorpay) {
+            const rzp = new Razorpay(options);
+            rzp.on('payment.failed', (response: any) => {
+              alert('Payment failed: ' + response.error.description);
+            });
+            rzp.open();
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Purchase error:', error);
+      alert('Failed to initiate purchase. Please try again.');
+    } finally {
+      setPurchasingPlan(null);
+    }
+  };
+
+  const currentPlans = plans.filter(plan =>
+    billingCycle === 'monthly'
+      ? !plan.id.includes('yearly')
+      : plan.id.includes('yearly')
+  );
 
   return (
     <div className="min-h-screen bg-white">
@@ -93,13 +199,13 @@ export default function HelpHivePassPage() {
             <div className="text-center max-w-3xl mx-auto mb-12">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary-10)] rounded-full mb-6">
                 <Crown className="h-4 w-4" style={{ color: 'var(--color-primary)' }} />
-                <span className="text-sm font-semibold" style={{ color: 'var(--color-primary)' }}>HelpHive Pass</span>
+                <span className="text-sm font-semibold" style={{ color: 'var(--color-primary)' }}>Helphive Pass</span>
               </div>
               <h1 className="text-3xl lg:text-5xl font-bold text-[var(--color-text)] mb-4">
-                Explore More. Save More.
+                Get More. Save More.
               </h1>
               <p className="text-lg text-[var(--color-text-secondary)]">
-                Unlock exclusive benefits, zero fees, and priority access. The smarter way to explore India's best destinations.
+                Unlock exclusive benefits, zero fees, and priority access with Helphive membership.
               </p>
             </div>
 
@@ -131,13 +237,13 @@ export default function HelpHivePassPage() {
             </div>
 
             {/* Pricing Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-              {plans.map((plan) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              {currentPlans.map((plan) => (
                 <div
-                  key={plan.name}
+                  key={plan.id}
                   className={`relative rounded-[var(--radius-xl)] p-6 lg:p-8 ${
                     plan.popular
-                      ? 'bg-[var(--color-text)] text-white shadow-xl scale-105'
+                      ? 'bg-[var(--color-text)] text-white shadow-xl'
                       : 'bg-white border border-[var(--color-border-light)]'
                   }`}
                 >
@@ -155,20 +261,29 @@ export default function HelpHivePassPage() {
                   </div>
 
                   <div className="mb-6">
-                    <span className="text-4xl font-bold">₹{billingCycle === 'yearly' ? Math.round(plan.price * 12 * (1 - yearlyDiscount / 100)) : plan.price * 12}</span>
+                    <span className="text-4xl font-bold">₹{plan.price}</span>
                     {plan.price > 0 && (
                       <span className={`text-sm ${plan.popular ? 'text-white/70' : 'text-[var(--color-text-secondary)]'}`}>
-                        /{billingCycle === 'yearly' ? 'year' : plan.period}
+                        /{plan.period}
                       </span>
                     )}
                   </div>
 
                   <Button
+                    onClick={() => handlePurchase(plan)}
                     variant={plan.popular ? 'secondary' : 'outline'}
                     size="lg"
                     className={`w-full mb-6 ${plan.popular ? 'bg-white text-[var(--color-text)] hover:bg-gray-100' : ''}`}
+                    disabled={purchasingPlan === plan.id}
                   >
-                    {plan.cta}
+                    {purchasingPlan === plan.id ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      plan.cta
+                    )}
                   </Button>
 
                   <div className="space-y-3">
@@ -199,7 +314,7 @@ export default function HelpHivePassPage() {
                 Everything You Get
               </h2>
               <p className="text-lg text-[var(--color-text-secondary)]">
-                Designed to make every trip better
+                Designed to make every interaction better
               </p>
             </div>
 
@@ -234,7 +349,7 @@ export default function HelpHivePassPage() {
                 <p className="text-sm text-[var(--color-text-secondary)]">Saved in Fees</p>
               </div>
               <div>
-                <p className="text-3xl lg:text-4xl font-bold text-[var(--color-text)]">4.9★</p>
+                <p className="text-3xl lg:text-4xl font-bold text-[var(--color-text)]">4.9</p>
                 <p className="text-sm text-[var(--color-text-secondary)]">Member Rating</p>
               </div>
               <div>
@@ -255,7 +370,7 @@ export default function HelpHivePassPage() {
             <div className="space-y-4">
               {[
                 { q: 'Can I cancel my membership anytime?', a: 'Yes! Cancel anytime from your account settings. You\'ll retain benefits until your billing period ends.' },
-                { q: 'How does the free trial work?', a: 'Start with a 7-day free trial on the HelpHive Pass. No payment required until your trial ends.' },
+                { q: 'How does the free trial work?', a: 'Start with a 7-day free trial on the Helphive Pass. No payment required until your trial ends.' },
                 { q: 'Do rewards stack with other offers?', a: 'Yes! Hive Coins and discount multipliers stack with existing promotional codes.' },
                 { q: 'Is there a refund policy?', a: 'We offer a 30-day money-back guarantee. If you\'re not satisfied, contact support for a full refund.' },
               ].map((faq) => (
@@ -277,18 +392,24 @@ export default function HelpHivePassPage() {
         <section className="py-16 bg-[var(--color-text)]">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-2xl lg:text-4xl font-bold text-white mb-4">
-              Ready to Unlock Your Best Trips?
+              Ready to Get Started?
             </h2>
             <p className="text-lg text-white/70 mb-8">
-              Join thousands of explorers who save time and money with HelpHive Pass.
+              Join thousands of members who save time and money with Helphive Pass.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-white text-[var(--color-text)] hover:bg-gray-100">
+              <Button
+                size="lg"
+                className="bg-white text-[var(--color-text)] hover:bg-gray-100"
+                onClick={() => handlePurchase({ id: 'helphive-pass', name: 'Helphive Pass', price: 199, period: 'month', cta: 'Start Free Trial', popular: true, description: '', features: [], notIncluded: [] })}
+              >
                 Start Free Trial
               </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                Talk to Sales
-              </Button>
+              <Link href="/auth/register">
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                  Create Account
+                </Button>
+              </Link>
             </div>
           </div>
         </section>
