@@ -13,56 +13,49 @@ const CITIES_DATA = [
   { name: 'Mumbai', image: 'https://images.unsplash.com/photo-1566552881560-0be862a7c445?w=400&h=300&fit=crop', count: 156, description: 'The City of Dreams' },
   { name: 'Delhi', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400&h=300&fit=crop', count: 203, description: 'Historic Capital' },
   { name: 'Bangalore', image: 'https://images.unsplash.com/photo-1596178065887-1198b6148b2b?w=400&h=300&fit=crop', count: 178, description: 'Garden City' },
-  { name: 'Goa', image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=400&h=300&fit=crop', count: 234, description: 'Beach Paradise' },
-  { name: 'Jaipur', image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=400&h=300&fit=crop', count: 189, description: 'Pink City' },
-  { name: 'Udaipur', image: 'https://images.unsplash.com/photo-1622896784083-fd1e3c69e8e9?w=400&h=300&fit=crop', count: 143, description: 'City of Lakes' },
-  { name: 'Varanasi', image: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?w=400&h=300&fit=crop', count: 98, description: 'Spiritual Capital' },
-  { name: 'Rishikesh', image: 'https://images.unsplash.com/photo-1600100195362-63369f3d0e5a?w=400&h=300&fit=crop', count: 156, description: 'Yoga Capital' },
-  { name: 'Agra', image: 'https://images.unsplash.com/photo-1580578578468-3bc5a4c2b6d5?w=400&h=300&fit=crop', count: 112, description: 'City of Taj' },
-  { name: 'Kerala', image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=400&h=300&fit=crop', count: 167, description: 'God\'s Own Country' },
-  { name: 'Manali', image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=400&h=300&fit=crop', count: 134, description: 'Mountain Haven' },
-  { name: 'Pune', image: 'https://images.unsplash.com/photo-1580077941997-a5898749d2a3?w=400&h=300&fit=crop', count: 145, description: 'Oxford of the East' },
   { name: 'Chennai', image: 'https://images.unsplash.com/photo-1587370560942-ad2a04eabb6d?w=400&h=300&fit=crop', count: 132, description: 'Detroit of India' },
-  { name: 'Kolkata', image: 'https://images.unsplash.com/photo-1550960282-c1a5c23b8e21?w=400&h=300&fit=crop', count: 98, description: 'City of Joy' },
   { name: 'Hyderabad', image: 'https://images.unsplash.com/photo-1573352868081-b33749d05ffd?w=400&h=300&fit=crop', count: 156, description: 'City of Pearls' },
+  { name: 'Kolkata', image: 'https://images.unsplash.com/photo-1550960282-c1a5c23b8e21?w=400&h=300&fit=crop', count: 98, description: 'City of Joy' },
+  { name: 'Pune', image: 'https://images.unsplash.com/photo-1580077941997-a5898749d2a3?w=400&h=300&fit=crop', count: 145, description: 'Oxford of the East' },
+  { name: 'Jaipur', image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=400&h=300&fit=crop', count: 189, description: 'Pink City' },
 ];
 
 // Animated text words
-const ANIMATED_WORDS = ['Adventure', 'Freedom', 'Exploration', 'Memories', 'Journey'];
+const ANIMATED_WORDS = ['Assistance', 'Community', 'Support', 'Growth', 'Connection'];
 
 const categories = [
-  { icon: '🚗', label: 'TukTuks', active: true },
-  { icon: '🛵', label: 'Scooters', active: false },
-  { icon: '🏍️', label: 'Bikes', active: false },
-  { icon: '🚙', label: 'Cars', active: false },
-  { icon: '🗺️', label: 'Tours', active: false },
-  { icon: '🎯', label: 'Experiences', active: false },
-  { icon: '🏆', label: 'Tournaments', active: false },
+  { icon: '🔧', label: 'Repairs', active: true },
+  { icon: '🧹', label: 'Cleaning', active: false },
+  { icon: '📚', label: 'Tutoring', active: false },
+  { icon: '🚚', label: 'Delivery', active: false },
+  { icon: '🏠', label: 'Home Help', active: false },
+  { icon: '💻', label: 'Tech Support', active: false },
+  { icon: '🚗', label: 'Transport', active: false },
 ];
 
-const featuredVehicles = [
-  { id: 1, title: 'Premium Tuk-Tuk with AC', location: 'Goa', price: 899, rating: 4.92, reviews: 128, image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop', instantBook: true },
-  { id: 2, title: 'Royal Enfield Himalayan', location: 'Rishikesh', price: 699, rating: 4.88, reviews: 94, image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=600&h=400&fit=crop', instantBook: true },
-  { id: 3, title: 'Vespa Style Scooter', location: 'Pondicherry', price: 499, rating: 4.95, reviews: 67, image: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=600&h=400&fit=crop', instantBook: false },
-  { id: 4, title: 'Adventure ATV Buggy', location: 'Jaipur', price: 1299, rating: 4.78, reviews: 45, image: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&h=400&fit=crop', instantBook: true },
+const featuredServices = [
+  { id: 1, title: 'Home Repairs & Maintenance', location: 'Mumbai', price: 499, rating: 4.92, reviews: 128, image: 'https://images.unsplash.com/photo-1581578731548-c64649cc085f?w=600&h=400&fit=crop', instantBook: true },
+  { id: 2, title: 'Professional Cleaning Service', location: 'Delhi', price: 699, rating: 4.88, reviews: 94, image: 'https://images.unsplash.com/photo-1581578731548-c64649cc085f?w=600&h=400&fit=crop', instantBook: true },
+  { id: 3, title: 'Math & Science Tutoring', location: 'Bangalore', price: 399, rating: 4.95, reviews: 67, image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&h=400&fit=crop', instantBook: false },
+  { id: 4, title: 'Moving & Delivery Help', location: 'Pune', price: 799, rating: 4.78, reviews: 45, image: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=600&h=400&fit=crop', instantBook: true },
 ];
 
 const topExperiences = [
-  { id: 1, title: 'Sunset Beach Tuk-Tuk Tour', location: 'Goa', price: 799, rating: 4.96, reviews: 234, image: 'https://images.unsplash.com/photo-1545127398-14699f92334b?w=600&h=400&fit=crop', category: 'City Tour' },
-  { id: 2, title: 'Heritage Walk & Food Trail', location: 'Jaipur', price: 999, rating: 4.91, reviews: 189, image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=600&h=400&fit=crop', category: 'Culture' },
-  { id: 3, title: 'River Rafting Adventure', location: 'Rishikesh', price: 1499, rating: 4.87, reviews: 312, image: 'https://images.unsplash.com/photo-1600100195362-63369f3d0e5a?w=600&h=400&fit=crop', category: 'Adventure' },
-  { id: 4, title: 'French Quarter Cycling', location: 'Pondicherry', price: 599, rating: 4.93, reviews: 156, image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=600&h=400&fit=crop', category: 'Cycling' },
+  { id: 1, title: 'Community Skill Exchange', location: 'Mumbai', price: 0, rating: 4.96, reviews: 234, image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&h=400&fit=crop', category: 'Community' },
+  { id: 2, title: 'Local Guide Tours', location: 'Jaipur', price: 999, rating: 4.91, reviews: 189, image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=600&h=400&fit=crop', category: 'Tours' },
+  { id: 3, title: 'Food & Cultural Experience', location: 'Delhi', price: 599, rating: 4.87, reviews: 312, image: 'https://images.unsplash.com/photo-1567337710282-00832b415979?w=600&h=400&fit=crop', category: 'Culture' },
+  { id: 4, title: 'Tech Help Sessions', location: 'Bangalore', price: 299, rating: 4.93, reviews: 156, image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&h=400&fit=crop', category: 'Technology' },
 ];
 
 const testimonials = [
-  { name: 'Priya S.', location: 'Mumbai', avatar: 'PS', rating: 5, text: 'Best experience ever! The tuk-tuk tour in Goa was incredible. Our guide was knowledgeable and friendly.' },
-  { name: 'Rahul M.', location: 'Delhi', avatar: 'RM', rating: 5, text: 'Rented a Royal Enfield from HelpHive for my Rishikesh trip. Process was seamless and bike was in perfect condition.' },
-  { name: 'Anita K.', location: 'Bangalore', avatar: 'AK', rating: 5, text: 'Won the Heritage Trail tournament and earned ₹5,000 credit! The gamification is so addictive. Love this platform.' },
+  { name: 'Priya S.', location: 'Mumbai', avatar: 'PS', rating: 5, text: 'Found an amazing tutor for my daughter. The community help is truly remarkable!' },
+  { name: 'Rahul M.', location: 'Delhi', avatar: 'RM', rating: 5, text: 'Got quick help with home repairs through HelpHive. The helper was professional and affordable.' },
+  { name: 'Anita K.', location: 'Bangalore', avatar: 'AK', rating: 5, text: 'Earned rewards by helping neighbors with tech support. Love the community spirit!' },
 ];
 
 export default function HomePage() {
   const router = useRouter();
-  const [activeCategory, setActiveCategory] = useState('TukTuks');
+  const [activeCategory, setActiveCategory] = useState('Repairs');
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [searchCity, setSearchCity] = useState('');
@@ -169,12 +162,12 @@ export default function HomePage() {
             {/* Animated Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full mb-8 animate-fade-in">
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              <span className="text-white/90 text-sm font-medium">India's #1 Local Explorer Platform</span>
+              <span className="text-white/90 text-sm font-medium">India's #1 Community Help Platform</span>
             </div>
 
             {/* Main Headline with Animated Words */}
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-              Discover the Joy of
+              Get the Help You Need,
               <span className="block mt-4">
                 <span className="relative inline-block">
                   <span className="bg-gradient-to-r from-[#FF385C] to-[#E61E4D] bg-clip-text text-transparent">
@@ -187,7 +180,7 @@ export default function HomePage() {
 
             {/* Subheadline */}
             <p className="text-lg sm:text-xl text-white/70 mb-12 max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              Rent iconic tuk-tuks, explore hidden gems, and create unforgettable memories across India's most vibrant destinations
+              Connect with local helpers, service providers, and community resources for all your needs
             </p>
 
             {/* Stats */}
@@ -212,14 +205,14 @@ export default function HomePage() {
                 href="/explore/vehicles"
                 className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#FF385C] hover:bg-[#E61E4D] text-white font-semibold rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-[#FF385C]/25"
               >
-                Explore Now
+                Find Help
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
                 href="/host/onboarding"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-semibold rounded-full transition-all duration-300 border border-white/20"
               >
-                Become a Host
+                Become a Helper
               </Link>
             </div>
           </div>
@@ -477,13 +470,13 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Featured Vehicles - Airbnb Card Grid */}
+        {/* Featured Services - Airbnb Card Grid */}
         <section className="py-8 lg:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl font-semibold text-[var(--color-text)]">Featured Vehicles</h2>
-                <p className="text-sm text-[var(--color-text-secondary)]">Premium rides for your next adventure</p>
+                <h2 className="text-xl font-semibold text-[var(--color-text)]">Featured Services</h2>
+                <p className="text-sm text-[var(--color-text-secondary)]">Popular help & services near you</p>
               </div>
               <Link href="/explore/vehicles" className="text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">
                 View all
@@ -492,10 +485,10 @@ export default function HomePage() {
 
             {/* Airbnb Grid - 4 columns on desktop */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredVehicles.map((vehicle, index) => (
+              {featuredServices.map((service, index) => (
                 <Link
-                  key={vehicle.id}
-                  href={`/vehicles/${vehicle.id}`}
+                  key={service.id}
+                  href={`/explore/vehicles?service=${service.id}`}
                   className="group animate-fade-in-up"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
@@ -503,13 +496,13 @@ export default function HomePage() {
                     {/* Image Container */}
                     <div className="relative aspect-[4/3] img-zoom">
                       <img
-                        src={vehicle.image}
-                        alt={vehicle.title}
+                        src={service.image}
+                        alt={service.title}
                         className="w-full h-full object-cover"
                       />
-                      {vehicle.instantBook && (
+                      {service.instantBook && (
                         <div className="absolute top-3 left-3">
-                          <span className="badge badge-primary font-medium">Instant Book</span>
+                          <span className="badge badge-primary font-medium">Available</span>
                         </div>
                       )}
                       {/* Heart Button */}
@@ -523,19 +516,19 @@ export default function HomePage() {
                     {/* Content */}
                     <div className="p-3">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-semibold text-[var(--color-text)] line-clamp-1">{vehicle.title}</h3>
+                        <h3 className="font-semibold text-[var(--color-text)] line-clamp-1">{service.title}</h3>
                         <div className="flex items-center gap-1">
                           <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                           </svg>
-                          <span className="text-sm font-medium">{vehicle.rating}</span>
-                          <span className="text-sm text-[var(--color-text-muted)]">({vehicle.reviews})</span>
+                          <span className="text-sm font-medium">{service.rating}</span>
+                          <span className="text-sm text-[var(--color-text-muted)]">({service.reviews})</span>
                         </div>
                       </div>
-                      <p className="text-sm text-[var(--color-text-secondary)] mb-2">{vehicle.location}</p>
+                      <p className="text-sm text-[var(--color-text-secondary)] mb-2">{service.location}</p>
                       <p className="text-sm font-semibold">
-                        <span className="text-[var(--color-text)]">₹{vehicle.price}</span>
-                        <span className="font-normal text-[var(--color-text-secondary)]"> / day</span>
+                        <span className="text-[var(--color-text)]">₹{service.price}</span>
+                        <span className="font-normal text-[var(--color-text-secondary)]"> / hr</span>
                       </p>
                     </div>
                   </div>

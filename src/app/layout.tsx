@@ -3,12 +3,12 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "TukTukIndia | Vehicle Rental & Local Experiences",
-  description: "Discover India with iconic tuk-tuks, scooters, and bikes. Book local experiences, explore heritage sites, and immerse yourself in authentic Indian culture.",
-  keywords: "tuktuk, India, vehicle rental, scooter, bike, local experiences, tours, India travel",
+  title: "Helphive | Community Help & Services Platform",
+  description: "A community-driven platform connecting people who need help with local service providers, helpers, and community resources.",
+  keywords: "help, community, services, local, helper, support, assistance, India",
   openGraph: {
-    title: "TukTukIndia | Vehicle Rental & Local Experiences",
-    description: "Discover India with iconic tuk-tuks, scooters, and bikes.",
+    title: "Helphive | Community Help & Services Platform",
+    description: "Connect with local helpers and service providers in your community.",
     type: "website",
   },
 };
