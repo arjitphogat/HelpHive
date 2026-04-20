@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useAuth } from '@/contexts/AuthContext';
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, isConfigured } from '@/lib/firebase';
 
 const loginSchema = z.object({
@@ -19,7 +18,6 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { refreshUserProfile } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -55,25 +53,46 @@ export default function LoginPage() {
   };
 
   const onSubmit = async (data: LoginFormData) => {
-    if (!isConfigured || !auth) {
-      router.push('/dashboard/user');
-      return;
-    }
-
     setIsLoading(true);
     setError('');
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
-      router.push('/dashboard/user');
-    } catch (err: any) {
-      if (err.code === 'auth/user-not-found') {
-        setError('No account found with this email. Please sign up first.');
-      } else if (err.code === 'auth/wrong-password') {
-        setError('Incorrect password. Please try again.');
-      } else if (err.code === 'auth/invalid-email') {
-        setError('Invalid email address.');
+      // Use API route for login
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Store auth token or session
+        localStorage.setItem('auth_token', 'firebase_token');
+        localStorage.setItem('user_id', result.user.uid);
+        router.push('/dashboard/user');
       } else {
-        setError(err.message || 'Failed to sign in. Please check your credentials.');
+        setError(result.error || 'Failed to sign in. Please check your credentials.');
+      }
+    } catch (err: any) {
+      // Fallback to Firebase direct auth if API fails
+      if (isConfigured && auth) {
+        try {
+          const { signInWithEmailAndPassword } = await import('firebase/auth');
+          await signInWithEmailAndPassword(auth, data.email, data.password);
+          router.push('/dashboard/user');
+        } catch (authErr: any) {
+          if (authErr.code === 'auth/user-not-found') {
+            setError('No account found with this email. Please sign up first.');
+          } else if (authErr.code === 'auth/wrong-password') {
+            setError('Incorrect password. Please try again.');
+          } else if (authErr.code === 'auth/invalid-email') {
+            setError('Invalid email address.');
+          } else {
+            setError(authErr.message || 'Failed to sign in. Please check your credentials.');
+          }
+        }
+      } else {
+        setError('Authentication is not available. Please try again later.');
       }
     } finally {
       setIsLoading(false);

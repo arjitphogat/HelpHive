@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   title: "Helphive | Community Help & Services Platform",
   description: "A community-driven platform connecting people who need help with local service providers, helpers, and community resources.",
   keywords: "help, community, services, local, helper, support, assistance, India",
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+  },
   openGraph: {
     title: "Helphive | Community Help & Services Platform",
     description: "Connect with local helpers and service providers in your community.",
