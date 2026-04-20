@@ -40,7 +40,7 @@ export default function RegisterPage() {
 
   const handleGoogleSignIn = async () => {
     if (!isConfigured || !auth) {
-      router.push('/dashboard/user');
+      setError('Firebase not configured. Please add environment variables in Vercel settings.');
       return;
     }
 
@@ -51,7 +51,11 @@ export default function RegisterPage() {
       await signInWithPopup(auth, provider);
       router.push('/dashboard/user');
     } catch (err: any) {
-      if (err.code !== 'auth/popup-closed-by-user') {
+      if (err.code === 'auth/popup-closed-by-user') {
+        // User closed the popup, no error needed
+      } else if (err.code === 'auth/account-exists-with-different-credential') {
+        setError('An account already exists with a different sign-in method. Please use email/password.');
+      } else {
         setError(err.message || 'Failed to sign in with Google');
       }
     } finally {
