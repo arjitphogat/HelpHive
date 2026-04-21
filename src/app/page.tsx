@@ -57,16 +57,16 @@ export default function HomePage() {
 
       <main>
         {/* HERO SECTION - Bold & Premium */}
-        <section className="relative min-h-[90vh] lg:min-h-[85vh] flex items-center justify-center overflow-hidden">
+        <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 lg:pt-24">
           {/* Dynamic Background */}
           <div className="absolute inset-0">
             {/* Gradient Base */}
             <div className="absolute inset-0 bg-gradient-to-br from-[#1A1A2E] via-[#16213E] to-[#2D2D44]" />
 
             {/* Animated Gradient Orbs */}
-            <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-[#FF5722]/20 rounded-full blur-[150px] animate-pulse" />
-            <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[#C6FF00]/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-[#00BCD4]/5 rounded-full blur-[200px] animate-pulse" style={{ animationDelay: '2s' }} />
+            <div className="absolute top-[-200px] left-[-200px] w-[900px] h-[900px] bg-[#FF5722]/20 rounded-full blur-[200px] animate-pulse" />
+            <div className="absolute bottom-[-200px] right-[-200px] w-[700px] h-[700px] bg-[#C6FF00]/10 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '1s' }} />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-[#00BCD4]/5 rounded-full blur-[250px] animate-pulse" style={{ animationDelay: '2s' }} />
 
             {/* Grid Pattern */}
             <div className="absolute inset-0 opacity-[0.03]" style={{
@@ -75,66 +75,66 @@ export default function HomePage() {
             }} />
 
             {/* Floating Elements */}
-            <div className="absolute top-32 right-[15%] text-7xl opacity-10 animate-float">🛵</div>
-            <div className="absolute bottom-40 left-[10%] text-6xl opacity-10 animate-float" style={{ animationDelay: '1.5s' }}>🏍️</div>
-            <div className="absolute top-1/3 right-[25%] text-5xl opacity-8 animate-float" style={{ animationDelay: '0.8s' }}>🚗</div>
-            <div className="absolute bottom-1/3 left-[20%] text-4xl opacity-6 animate-float" style={{ animationDelay: '2s' }}>⚡</div>
+            <div className="absolute top-40 right-[15%] text-8xl opacity-10 animate-float hidden lg:block">🛵</div>
+            <div className="absolute bottom-48 left-[10%] text-7xl opacity-10 animate-float hidden lg:block" style={{ animationDelay: '1.5s' }}>🏍️</div>
+            <div className="absolute top-1/3 right-[25%] text-6xl opacity-8 animate-float hidden lg:block" style={{ animationDelay: '0.8s' }}>🚗</div>
+            <div className="absolute bottom-1/3 left-[20%] text-5xl opacity-6 animate-float hidden lg:block" style={{ animationDelay: '2s' }}>⚡</div>
           </div>
 
           {/* Content */}
-          <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="relative z-10 max-w-5xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
             {/* Premium Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-xl rounded-full mb-8 border border-white/10 animate-fade-in">
-              <span className="relative flex h-2 w-2">
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-xl rounded-full mb-10 border border-white/10 animate-fade-in">
+              <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C6FF00] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#C6FF00]"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#C6FF00]"></span>
               </span>
-              <span className="text-white/90 text-sm font-medium">India's Premier TukTuk & Ride Platform</span>
+              <span className="text-white/90 text-sm font-medium tracking-wide">India's Premier TukTuk & Ride Platform</span>
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-[1.1] animate-fade-in-up" style={{ fontFamily: 'Sora, sans-serif' }}>
-              <span className="block">Ride Cities.</span>
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#FF5722] to-[#FFD700]">Win Adventures.</span>
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-white mb-8 leading-[1.05] animate-fade-in-up" style={{ fontFamily: 'Sora, sans-serif' }}>
+              <span className="block mb-3">Ride Cities.</span>
+              <span className="block mb-3 text-transparent bg-clip-text bg-gradient-to-r from-[#FF5722] to-[#FFD700]">Win Adventures.</span>
               <span className="block">Discover India.</span>
             </h1>
 
             {/* Subheadline */}
-            <p className="text-lg sm:text-xl text-white/70 mb-10 max-w-2xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            <p className="text-lg sm:text-xl lg:text-2xl text-white/70 mb-12 max-w-3xl mx-auto animate-fade-in-up leading-relaxed" style={{ animationDelay: '0.1s' }}>
               Explore India's most vibrant cities with TukTuks, bikes, and local experiences.
               Earn rewards. Compete in tournaments. Make every ride unforgettable.
             </p>
 
             {/* Search Bar */}
-            <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-10 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <form onSubmit={handleSearch} className="max-w-3xl mx-auto mb-14 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
               <div className="relative flex items-center bg-white rounded-full shadow-2xl overflow-hidden">
-                <div className="flex-1 flex items-center px-6">
-                  <MapPin className="h-5 w-5 text-[#FF5722] shrink-0" />
+                <div className="flex-1 flex items-center px-8 py-5">
+                  <MapPin className="h-6 w-6 text-[#FF5722] shrink-0" />
                   <input
                     type="text"
                     placeholder="Where do you want to explore?"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-5 bg-transparent text-[#1A1A2E] placeholder:text-gray-400 outline-none text-lg"
+                    className="w-full px-5 py-2 bg-transparent text-[#1A1A2E] placeholder:text-gray-400 outline-none text-lg"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="m-2 px-8 py-4 bg-gradient-to-r from-[#FF5722] to-[#FF8A65] text-white font-semibold rounded-full hover:shadow-[0_0_30px_rgba(255,87,34,0.4)] transition-all duration-300 flex items-center gap-2"
+                  className="m-2 mr-2 px-10 py-5 bg-gradient-to-r from-[#FF5722] to-[#FF8A65] text-white font-bold rounded-full hover:shadow-[0_0_40px_rgba(255,87,34,0.5)] transition-all duration-300 flex items-center gap-3 text-lg"
                 >
-                  <Search className="h-5 w-5" />
+                  <Search className="h-6 w-6" />
                   <span className="hidden sm:inline">Explore</span>
                 </button>
               </div>
             </form>
 
             {/* Quick City Pills */}
-            <div className="flex flex-wrap justify-center gap-3 mb-12 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+            <div className="flex flex-wrap justify-center gap-4 mb-16 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
               {['Goa', 'Jaipur', 'Mumbai', 'Delhi', 'Bangalore'].map((city) => (
                 <button
                   key={city}
                   onClick={() => router.push(`/explore/vehicles?city=${city}`)}
-                  className="px-4 py-2 bg-white/10 backdrop-blur-xl text-white/90 rounded-full text-sm font-medium border border-white/10 hover:bg-white/20 transition-all"
+                  className="px-5 py-2.5 bg-white/10 backdrop-blur-xl text-white/90 rounded-full text-base font-medium border border-white/10 hover:bg-white/20 hover:border-white/20 transition-all"
                 >
                   {city}
                 </button>
@@ -142,11 +142,11 @@ export default function HomePage() {
             </div>
 
             {/* Stats */}
-            <div className="flex flex-wrap justify-center gap-8 sm:gap-12 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            <div className="flex flex-wrap justify-center gap-12 sm:gap-16 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
               {STATS.map((stat) => (
                 <div key={stat.label} className="text-center">
-                  <p className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: 'Sora, sans-serif' }}>{stat.value}</p>
-                  <p className="text-white/60 text-sm">{stat.label}</p>
+                  <p className="text-4xl sm:text-5xl font-bold text-white" style={{ fontFamily: 'Sora, sans-serif' }}>{stat.value}</p>
+                  <p className="text-white/60 text-base mt-1">{stat.label}</p>
                 </div>
               ))}
             </div>
