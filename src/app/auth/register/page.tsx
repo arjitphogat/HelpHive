@@ -106,22 +106,24 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-500/10 via-[#FF385C]/10 to-purple-500/10 px-4 py-6 sm:py-12">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#4A00E0]/5 via-purple-500/5 to-[#4A00E0]/5 px-4 py-6 sm:py-12">
       <div className="relative w-full max-w-[440px]">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-3">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#FF385C] to-purple-500 flex items-center justify-center shadow-lg">
-              <span className="text-2xl">🐝</span>
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA] flex items-center justify-center shadow-lg">
+              <span className="text-2xl">🛵</span>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-[#FF385C] to-purple-500 bg-clip-text text-transparent">HelpHive</span>
+            <span className="text-2xl font-bold text-[#1A1A2E]" style={{ fontFamily: 'Sora, sans-serif' }}>
+              HELP<span className="text-[#8B5CF6]">HIVE</span>
+            </span>
           </Link>
         </div>
 
         <div className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-1">Create your account</h1>
-            <p className="text-gray-500">Join HelpHive and start exploring</p>
+            <p className="text-gray-500">Join HELPHIVE and start exploring</p>
           </div>
 
           {error && (
@@ -142,7 +144,7 @@ export default function RegisterPage() {
             className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 group disabled:opacity-60"
           >
             {googleLoading ? (
-              <div className="w-5 h-5 border-2 border-gray-300 border-t-[#FF385C] rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-gray-300 border-t-[#8B5CF6] rounded-full animate-spin" />
             ) : (
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -170,7 +172,7 @@ export default function RegisterPage() {
               <input
                 type="text"
                 placeholder="Enter your full name"
-                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.displayName ? 'border-red-400' : 'border-gray-200 focus:border-[#FF385C]'} bg-white text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none`}
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.displayName ? 'border-red-400' : 'border-gray-200 focus:border-[#8B5CF6]'} bg-white text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none`}
                 {...register('displayName')}
               />
               {errors.displayName && (
@@ -183,7 +185,7 @@ export default function RegisterPage() {
               <input
                 type="email"
                 placeholder="you@example.com"
-                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.email ? 'border-red-400' : 'border-gray-200 focus:border-[#FF385C]'} bg-white text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none`}
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.email ? 'border-red-400' : 'border-gray-200 focus:border-[#8B5CF6]'} bg-white text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none`}
                 {...register('email')}
               />
               {errors.email && (
@@ -197,7 +199,7 @@ export default function RegisterPage() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Create a password"
-                  className={`w-full px-4 py-3 rounded-xl border-2 ${errors.password ? 'border-red-400' : 'border-gray-200 focus:border-[#FF385C]'} bg-white text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none pr-12`}
+                  className={`w-full px-4 py-3 rounded-xl border-2 ${errors.password ? 'border-red-400' : 'border-gray-200 focus:border-[#8B5CF6]'} bg-white text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none pr-12`}
                   {...register('password')}
                 />
                 <button
@@ -219,7 +221,7 @@ export default function RegisterPage() {
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Confirm your password"
-                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.confirmPassword ? 'border-red-400' : 'border-gray-200 focus:border-[#FF385C]'} bg-white text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none`}
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.confirmPassword ? 'border-red-400' : 'border-gray-200 focus:border-[#8B5CF6]'} bg-white text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none`}
                 {...register('confirmPassword')}
               />
               {errors.confirmPassword && (
@@ -231,7 +233,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setAcceptTerms(!acceptTerms)}
-                className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${acceptTerms ? 'bg-[#FF385C] border-[#FF385C]' : 'border-gray-300 hover:border-[#FF385C]'}`}
+                className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${acceptTerms ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-gray-300 hover:border-[#8B5CF6]'}`}
               >
                 {acceptTerms && (
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -241,16 +243,16 @@ export default function RegisterPage() {
               </button>
               <p className="text-sm text-gray-500">
                 I agree to the{' '}
-                <Link href="/terms" className="text-[#FF385C] hover:underline">Terms</Link>
+                <Link href="/terms" className="text-[#8B5CF6] hover:underline">Terms</Link>
                 {' '}and{' '}
-                <Link href="/privacy" className="text-[#FF385C] hover:underline">Privacy Policy</Link>
+                <Link href="/privacy" className="text-[#8B5CF6] hover:underline">Privacy Policy</Link>
               </p>
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#FF385C] to-purple-500 text-white font-semibold hover:shadow-lg hover:shadow-[#FF385C]/30 transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#8B5CF6] to-[#A78BFA] text-white font-semibold hover:shadow-lg hover:shadow-[#8B5CF6]/30 transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -265,7 +267,7 @@ export default function RegisterPage() {
 
           <p className="mt-8 text-center text-gray-500">
             Already have an account?{' '}
-            <Link href="/auth/login" className="text-[#FF385C] font-semibold hover:underline">
+            <Link href="/auth/login" className="text-[#8B5CF6] font-semibold hover:underline">
               Sign in
             </Link>
           </p>
@@ -276,7 +278,7 @@ export default function RegisterPage() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to HelpHive
+            Back to HELPHIVE
           </Link>
         </div>
       </div>
