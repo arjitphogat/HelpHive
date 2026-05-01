@@ -32,8 +32,17 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
-# vercel
+# Turso CLI data
+auth
+auth-wal
+
+# Schema helper scripts
+push-schema.ts
+*.sql
+
+# Vercel
 .vercel
 
 # typescript

@@ -329,7 +329,7 @@ export default function CityPage() {
               {city.featuredVehicles.map((vehicle) => (
                 <Link
                   key={vehicle.id}
-                  href={`/vehicles/${vehicle.id}`}
+                  href={`/explore/vehicles/${vehicle.id}`}
                   className="group bg-white rounded-[var(--radius-xl)] overflow-hidden"
                 >
                   <div className="relative aspect-[4/3] overflow-hidden">
@@ -386,7 +386,7 @@ export default function CityPage() {
               {city.featuredTours.map((tour) => (
                 <Link
                   key={tour.id}
-                  href={`/experiences/${tour.id}`}
+                  href={`/explore/experiences/${tour.id}`}
                   className="group bg-white rounded-[var(--radius-xl)] overflow-hidden border border-[var(--color-border-light)]"
                 >
                   <div className="relative aspect-[16/10] overflow-hidden">

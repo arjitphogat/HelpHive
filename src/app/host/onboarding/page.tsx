@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+// Force dynamic rendering to avoid SSR issues with Firebase/auth
+export const dynamic = 'force-dynamic';
+
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components/layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, Button, Input } from '@/components/ui';
 import { HostService } from '@/services/auth.service';
-import { auth } from '@/lib/firebase';
 import {
   Car, MapPin, Trophy, Sparkles, CheckCircle,
   Shield, Clock, Star, Users, Award, ChevronRight
@@ -105,10 +107,27 @@ const SPECIALTIES = [
 export default function HostOnboardingPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<'select-type' | 'vehicle' | 'guide' | 'tournament' | 'experience'>('select-type');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Prevent SSR rendering issues
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[var(--color-surface-muted)]">
+        <div className="h-20" />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-primary)]" />
+        </main>
+      </div>
+    );
+  }
 
   // Form states
   const [vehicleData, setVehicleData] = useState({

@@ -1,5 +1,8 @@
 'use client';
 
+// Force dynamic rendering to avoid SSR issues with Firebase/auth
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect, useRef } from 'react';
 import { Header, Footer } from '@/components/layout';
 import { useAuth } from '@/contexts/AuthContext';

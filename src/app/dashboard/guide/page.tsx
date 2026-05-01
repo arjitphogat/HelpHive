@@ -1,5 +1,8 @@
 'use client';
 
+// Force dynamic rendering to avoid SSR issues with Firebase/auth
+export const dynamic = 'force-dynamic';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -180,15 +183,8 @@ export default function GuideDashboardPage() {
               <div className="space-y-4">
                 {myTours.map((tour) => (
                   <div key={tour.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="h-16 w-16 rounded-lg bg-gray-200 overflow-hidden flex-shrink-0">
-                      <img
-                        src={tour.image}
-                        alt={tour.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = '/placeholder-experience.jpg';
-                        }}
-                      />
+                    <div className="h-16 w-16 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xl font-bold overflow-hidden flex-shrink-0">
+                      <span className="text-2xl">🗺️</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-[var(--color-text)] truncate">{tour.title}</h3>

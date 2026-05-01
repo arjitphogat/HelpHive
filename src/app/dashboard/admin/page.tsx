@@ -1,5 +1,8 @@
 'use client';
 
+// Force dynamic rendering to avoid SSR issues with Firebase/auth
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { Header, Footer } from '@/components/layout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -65,13 +68,15 @@ export default function AdminDashboard() {
       setPendingExperiences(experiences.experiences.filter((e) => e.status === 'pending'));
 
       // Calculate stats
+      const pendingCount = vehicles.vehicles.filter((v) => v.status === 'pending').length +
+        experiences.experiences.filter((e) => e.status === 'pending').length;
       setStats({
         totalUsers: 0, // Would fetch from admin API
         totalVehicles: vehicles.vehicles.length,
         totalExperiences: experiences.experiences.length,
         totalBookings: 0,
         totalRevenue: 0,
-        pendingApprovals: pendingVehicles.length + pendingExperiences.length,
+        pendingApprovals: pendingCount,
       });
     } catch (error) {
       console.error('Error loading admin data:', error);
