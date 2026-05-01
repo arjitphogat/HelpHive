@@ -114,6 +114,12 @@ export function Header() {
             <Link href="/explore/vehicles" className="text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition">
               Rentals
             </Link>
+            <Link href="/hotels" className="text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition">
+              Hotels
+            </Link>
+            <Link href="/travel" className="text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition">
+              Travel
+            </Link>
             <Link href="/tournament" className="text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition">
               Tournaments
             </Link>
@@ -305,6 +311,8 @@ export function Header() {
 
             <div className="border-t border-[var(--color-border-light)] pt-2" />
             <Link href="/explore/vehicles" className="block px-4 py-3 text-sm font-medium hover:bg-[var(--color-surface-muted)] rounded-[var(--radius-md)]">Rentals</Link>
+            <Link href="/hotels" className="block px-4 py-3 text-sm font-medium hover:bg-[var(--color-surface-muted)] rounded-[var(--radius-md)]">Hotels</Link>
+            <Link href="/travel" className="block px-4 py-3 text-sm font-medium hover:bg-[var(--color-surface-muted)] rounded-[var(--radius-md)]">Travel</Link>
             <Link href="/tournament" className="block px-4 py-3 text-sm font-medium hover:bg-[var(--color-surface-muted)] rounded-[var(--radius-md)]">Tournaments</Link>
             <Link href="/explore/experiences" className="block px-4 py-3 text-sm font-medium hover:bg-[var(--color-surface-muted)] rounded-[var(--radius-md)]">Experiences</Link>
             <Link href="/cities" className="block px-4 py-3 text-sm font-medium hover:bg-[var(--color-surface-muted)] rounded-[var(--radius-md)]">All Cities</Link>
