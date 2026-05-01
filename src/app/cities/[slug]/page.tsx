@@ -275,8 +275,9 @@ export default function CityPage() {
       return;
     }
     // Store booking in localStorage for demo (in production, use API)
+    const bookingId = `BK-${Date.now().toString(36).toUpperCase()}`;
     const booking = {
-      id: `BK-${Date.now()}`,
+      id: bookingId,
       type: bookingModal?.type,
       item: bookingModal?.item,
       city: slug,
@@ -292,9 +293,15 @@ export default function CityPage() {
     existingBookings.push(booking);
     localStorage.setItem('helphive_bookings', JSON.stringify(existingBookings));
 
-    alert(`Booking confirmed! Your booking ID is: ${booking.id}\n\nCheck your profile to view all bookings.`);
-    setBookingModal(null);
-    router.push('/dashboard/user');
+    // Store booking details for success page
+    localStorage.setItem('booking_type', booking.type as string);
+    localStorage.setItem('booking_item', encodeURIComponent(bookingModal?.item?.name || bookingModal?.item?.brand + ' ' + bookingModal?.item?.model || 'Booking'));
+    localStorage.setItem('booking_location', encodeURIComponent(city.name));
+    localStorage.setItem('booking_date', encodeURIComponent(bookingData.date));
+    localStorage.setItem('booking_total', booking.total.toString());
+    localStorage.setItem('booking_id', booking.id);
+
+    router.push('/booking/success');
   };
 
   const renderVehicles = () => (

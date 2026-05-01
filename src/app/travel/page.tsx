@@ -6,8 +6,10 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components/layout';
 import { Button, Badge, Input } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
 import { Search, MapPin, Calendar, Train, Plane, Bus, ArrowRight, Star, Clock, Shield, Users, ChevronDown, Wifi } from 'lucide-react';
 
 interface TrainOption {
@@ -90,16 +92,59 @@ const formatCurrency = (amount: number) => {
 };
 
 export default function TravelPage() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'trains' | 'flights' | 'buses'>('trains');
   const [fromCity, setFromCity] = useState('');
   const [toCity, setToCity] = useState('');
   const [travelDate, setTravelDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
+  const [selectedBooking, setSelectedBooking] = useState<{ type: string; item: any } | null>(null);
+  const [bookingDate, setBookingDate] = useState('');
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const openBooking = (type: string, item: any) => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+    setSelectedBooking({ type, item });
+    setBookingDate(travelDate || new Date().toISOString().split('T')[0]);
+  };
+
+  const handleTravelBooking = () => {
+    if (!selectedBooking) return;
+    const bookingId = `BK-${Date.now().toString(36).toUpperCase()}`;
+    const booking = {
+      id: bookingId,
+      type: selectedBooking.type,
+      item: selectedBooking.item,
+      location: `${selectedBooking.item.from} to ${selectedBooking.item.to}`,
+      date: bookingDate,
+      guests: 1,
+      total: selectedBooking.item.price,
+      status: 'confirmed',
+      createdAt: new Date().toISOString(),
+    };
+
+    const existingBookings = JSON.parse(localStorage.getItem('helphive_bookings') || '[]');
+    existingBookings.push(booking);
+    localStorage.setItem('helphive_bookings', JSON.stringify(existingBookings));
+
+    localStorage.setItem('booking_type', selectedBooking.type);
+    localStorage.setItem('booking_item', encodeURIComponent(selectedBooking.item.name || selectedBooking.item.airline || selectedBooking.item.operator));
+    localStorage.setItem('booking_location', encodeURIComponent(`${selectedBooking.item.from} to ${selectedBooking.item.to}`));
+    localStorage.setItem('booking_date', encodeURIComponent(bookingDate));
+    localStorage.setItem('booking_total', selectedBooking.item.price.toString());
+    localStorage.setItem('booking_id', booking.id);
+
+    setSelectedBooking(null);
+    router.push('/booking/success');
+  };
 
   if (!mounted) {
     return (
@@ -166,7 +211,7 @@ export default function TravelPage() {
                 <p className="text-2xl font-bold text-[#FF5722]">{formatCurrency(train.price)}</p>
                 <p className="text-xs text-[#4A4A6A]">per person</p>
               </div>
-              <Button>Book Now</Button>
+              <Button onClick={() => openBooking('train', train)}>Book Now</Button>
             </div>
           </div>
         </div>
@@ -224,7 +269,7 @@ export default function TravelPage() {
                   <p className="text-sm text-[#4A4A6A] line-through">{formatCurrency(flight.originalPrice)}</p>
                 )}
               </div>
-              <Button>Book Now</Button>
+              <Button onClick={() => openBooking('flight', flight)}>Book Now</Button>
             </div>
           </div>
         </div>
@@ -279,7 +324,7 @@ export default function TravelPage() {
                 <p className="text-2xl font-bold text-[#FF5722]">{formatCurrency(bus.price)}</p>
                 <p className="text-xs text-[#4A4A6A]">{bus.seatsAvailable} seats left</p>
               </div>
-              <Button>Book Now</Button>
+              <Button onClick={() => openBooking('bus', bus)}>Book Now</Button>
             </div>
           </div>
         </div>
@@ -472,6 +517,64 @@ export default function TravelPage() {
       </main>
 
       <Footer />
+
+      {/* Travel Booking Modal */}
+      {selectedBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-xl font-bold mb-4">
+              Book {selectedBooking.type === 'train' ? selectedBooking.item.name : selectedBooking.type === 'flight' ? selectedBooking.item.airline : selectedBooking.item.operator}
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Travel Date</label>
+                <input
+                  type="date"
+                  value={bookingDate}
+                  onChange={(e) => setBookingDate(e.target.value)}
+                  className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-[#FF5722]"
+                  min={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+              <div className="p-4 bg-[#FAFAFA] rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA] flex items-center justify-center text-white">
+                    {selectedBooking.type === 'train' ? <Train className="h-5 w-5" /> : selectedBooking.type === 'flight' ? <Plane className="h-5 w-5" /> : <Bus className="h-5 w-5" />}
+                  </div>
+                  <div>
+                    <p className="font-semibold">{selectedBooking.item.from} → {selectedBooking.item.to}</p>
+                    <p className="text-sm text-[#4A4A6A]">{selectedBooking.item.departure} - {selectedBooking.item.arrival}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="pt-4 border-t">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-600">Price per person</span>
+                  <span className="font-bold">{formatCurrency(selectedBooking.item.price)}</span>
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-600">Passengers</span>
+                  <span>1</span>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <span className="font-semibold">Total</span>
+                  <span className="text-2xl font-bold text-[#FF5722]">
+                    {formatCurrency(selectedBooking.item.price)}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <Button variant="outline" onClick={() => setSelectedBooking(null)} className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={handleTravelBooking} className="flex-1">
+                Confirm Booking
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

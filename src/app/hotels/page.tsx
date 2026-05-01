@@ -6,8 +6,10 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components/layout';
 import { Button, Badge, Input } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
 import { Search, MapPin, Calendar, Star, Filter, ChevronDown, Wifi, Car, Coffee, Phone, Clock, Users, ArrowRight, Shield } from 'lucide-react';
 
 interface Hotel {
@@ -126,6 +128,8 @@ const formatCurrency = (amount: number) => {
 };
 
 export default function HotelsPage() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
@@ -133,10 +137,55 @@ export default function HotelsPage() {
   const [selectedType, setSelectedType] = useState('All');
   const [sortBy, setSortBy] = useState('rating');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
+  const [bookingDate, setBookingDate] = useState('');
+  const [guestCount, setGuestCount] = useState(1);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const openBookingModal = (hotel: Hotel) => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+    setSelectedHotel(hotel);
+  };
+
+  const handleHotelBooking = () => {
+    if (!selectedHotel || !bookingDate) {
+      alert('Please select a date');
+      return;
+    }
+    const bookingId = `BK-${Date.now().toString(36).toUpperCase()}`;
+    const booking = {
+      id: bookingId,
+      type: 'hotel',
+      item: selectedHotel,
+      location: selectedHotel.location,
+      date: bookingDate,
+      guests: guestCount,
+      total: selectedHotel.price,
+      status: 'confirmed',
+      createdAt: new Date().toISOString(),
+    };
+
+    const existingBookings = JSON.parse(localStorage.getItem('helphive_bookings') || '[]');
+    existingBookings.push(booking);
+    localStorage.setItem('helphive_bookings', JSON.stringify(existingBookings));
+
+    localStorage.setItem('booking_type', 'hotel');
+    localStorage.setItem('booking_item', encodeURIComponent(selectedHotel.name));
+    localStorage.setItem('booking_location', encodeURIComponent(selectedHotel.location));
+    localStorage.setItem('booking_date', encodeURIComponent(bookingDate));
+    localStorage.setItem('booking_total', selectedHotel.price.toString());
+    localStorage.setItem('booking_id', booking.id);
+
+    setSelectedHotel(null);
+    setBookingDate('');
+    router.push('/booking/success');
+  };
 
   if (!mounted) {
     return (
@@ -309,9 +358,8 @@ export default function HotelsPage() {
             {/* Hotels Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredHotels.map(hotel => (
-                <Link
+                <div
                   key={hotel.id}
-                  href={`/hotels/${hotel.id}`}
                   className="group bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(26,26,46,0.06)] hover:shadow-[0_12px_40px_rgba(26,26,46,0.12)] transition-all duration-300"
                 >
                   <div className="relative aspect-[16/10] overflow-hidden">
@@ -367,10 +415,15 @@ export default function HotelsPage() {
                           </span>
                         )}
                       </div>
-                      <span className="text-sm text-[#4A4A6A]">{hotel.reviewCount} reviews</span>
+                      <div className="flex gap-2">
+                        <span className="text-sm text-[#4A4A6A]">{hotel.reviewCount} reviews</span>
+                        <Button size="sm" onClick={() => openBookingModal(hotel)}>
+                          Book
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
 
@@ -414,6 +467,63 @@ export default function HotelsPage() {
       </main>
 
       <Footer />
+
+      {/* Booking Modal */}
+      {selectedHotel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-xl font-bold mb-4">Book {selectedHotel.name}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Check-in Date</label>
+                <input
+                  type="date"
+                  value={bookingDate}
+                  onChange={(e) => setBookingDate(e.target.value)}
+                  className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-[#FF5722]"
+                  min={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Number of Guests</label>
+                <select
+                  value={guestCount}
+                  onChange={(e) => setGuestCount(Number(e.target.value))}
+                  className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-[#FF5722]"
+                >
+                  {[1, 2, 3, 4, 5, 6].map((g) => (
+                    <option key={g} value={g}>{g} {g === 1 ? 'Guest' : 'Guests'}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="pt-4 border-t">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-600">Price per night</span>
+                  <span className="font-bold">{formatCurrency(selectedHotel.price)}</span>
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-600">Nights</span>
+                  <span>1</span>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <span className="font-semibold">Total</span>
+                  <span className="text-2xl font-bold text-[#FF5722]">
+                    {formatCurrency(selectedHotel.price)}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <Button variant="outline" onClick={() => { setSelectedHotel(null); setBookingDate(''); }} className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={handleHotelBooking} className="flex-1">
+                Confirm Booking
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

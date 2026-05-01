@@ -24,17 +24,41 @@ import {
   Clock,
   TrendingUp,
   BarChart3,
+  Hotel,
+  Navigation,
+  Camera,
+  Eye,
+  X,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
+
+interface UserWithBookings extends User {
+  bookings: BookingDisplay[];
+}
+
+interface BookingDisplay {
+  id: string;
+  type: string;
+  title: string;
+  date: string;
+  total: number;
+  status: string;
+  location: string;
+}
 
 export default function AdminDashboard() {
   const { user, userProfile, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
+  const [activeBookingsTab, setActiveBookingsTab] = useState<'all' | 'vehicles' | 'hotels' | 'experiences'>('all');
   const [pendingHosts, setPendingHosts] = useState<User[]>([]);
   const [pendingGuides, setPendingGuides] = useState<User[]>([]);
   const [pendingVehicles, setPendingVehicles] = useState<Vehicle[]>([]);
   const [pendingExperiences, setPendingExperiences] = useState<Experience[]>([]);
+  const [allUsers, setAllUsers] = useState<UserWithBookings[]>([]);
+  const [allBookings, setAllBookings] = useState<BookingDisplay[]>([]);
+  const [selectedUser, setSelectedUser] = useState<UserWithBookings | null>(null);
+  const [showUserModal, setShowUserModal] = useState(false);
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalVehicles: 0,
@@ -67,23 +91,104 @@ export default function AdminDashboard() {
       setPendingVehicles(vehicles.vehicles.filter((v) => v.status === 'pending'));
       setPendingExperiences(experiences.experiences.filter((e) => e.status === 'pending'));
 
+      // Load all users from localStorage (demo)
+      const storedUsers = JSON.parse(localStorage.getItem('helphive_users') || '[]');
+      const storedBookings = JSON.parse(localStorage.getItem('helphive_bookings') || '[]') as BookingDisplay[];
+
+      // Transform bookings to display format
+      const transformedBookings: BookingDisplay[] = storedBookings.map((b: any) => ({
+        id: b.id,
+        type: b.type || 'vehicle',
+        title: b.item?.name || b.item?.title || `${b.item?.brand || ''} ${b.item?.model || ''}`.trim() || 'Booking',
+        date: b.date,
+        total: b.total || b.item?.price || 0,
+        status: b.status || 'pending',
+        location: b.city || b.location || 'Unknown',
+      }));
+
+      setAllBookings(transformedBookings);
+
+      // Combine users with their bookings
+      const usersWithBookings: UserWithBookings[] = storedUsers.map((u: User) => ({
+        ...u,
+        bookings: transformedBookings.filter((b) => b.id.includes(u.id?.slice(0, 8) || 'demo')),
+      }));
+
+      setAllUsers(usersWithBookings);
+
+      // Also add demo bookings to the list
+      if (transformedBookings.length > 0 && allBookings.length === 0) {
+        setAllBookings(transformedBookings);
+      }
+
       // Calculate stats
       const pendingCount = vehicles.vehicles.filter((v) => v.status === 'pending').length +
         experiences.experiences.filter((e) => e.status === 'pending').length;
       setStats({
-        totalUsers: 0, // Would fetch from admin API
+        totalUsers: storedUsers.length || 1,
         totalVehicles: vehicles.vehicles.length,
         totalExperiences: experiences.experiences.length,
-        totalBookings: 0,
-        totalRevenue: 0,
+        totalBookings: transformedBookings.length || storedBookings.length || 0,
+        totalRevenue: transformedBookings.reduce((sum: number, b: BookingDisplay) => sum + (b.total || 0), 0),
         pendingApprovals: pendingCount,
       });
     } catch (error) {
       console.error('Error loading admin data:', error);
+      // Fallback: show demo data
+      setStats({
+        totalUsers: 1,
+        totalVehicles: 0,
+        totalExperiences: 0,
+        totalBookings: 0,
+        totalRevenue: 0,
+        pendingApprovals: 0,
+      });
     } finally {
       setIsLoading(false);
     }
   };
+
+  const viewUserDetails = (userData: UserWithBookings) => {
+    setSelectedUser(userData);
+    setShowUserModal(true);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return <Badge variant="success">Confirmed</Badge>;
+      case 'completed':
+        return <Badge variant="info">Completed</Badge>;
+      case 'cancelled':
+        return <Badge variant="error">Cancelled</Badge>;
+      case 'pending':
+        return <Badge variant="warning">Pending</Badge>;
+      default:
+        return <Badge variant="info">{status}</Badge>;
+    }
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'vehicle': return <Navigation className="h-4 w-4" />;
+      case 'hotel': return <Hotel className="h-4 w-4" />;
+      case 'experience': return <Camera className="h-4 w-4" />;
+      default: return <Calendar className="h-4 w-4" />;
+    }
+  };
+
+  const getBookingTypeIcon = (type: string) => {
+    switch (type) {
+      case 'vehicle': return <Navigation className="h-5 w-5" />;
+      case 'hotel': return <Hotel className="h-5 w-5" />;
+      case 'experience': return <Camera className="h-5 w-5" />;
+      default: return <Car className="h-5 w-5" />;
+    }
+  };
+
+  const filteredBookings = activeBookingsTab === 'all'
+    ? allBookings
+    : allBookings.filter((b) => b.type === activeBookingsTab);
 
   const handleApproveVehicle = async (vehicleId: string) => {
     try {
@@ -176,6 +281,7 @@ export default function AdminDashboard() {
             <nav className="flex gap-6">
               {[
                 { id: 'overview', label: 'Overview', icon: BarChart3 },
+                { id: 'bookings', label: 'Bookings', icon: Calendar },
                 { id: 'vehicles', label: 'Vehicles', icon: Car },
                 { id: 'experiences', label: 'Experiences', icon: Compass },
                 { id: 'users', label: 'Users', icon: Users },
@@ -191,6 +297,12 @@ export default function AdminDashboard() {
                 >
                   <tab.icon className="h-4 w-4" />
                   {tab.label}
+                  {tab.id === 'bookings' && stats.totalBookings > 0 && (
+                    <Badge variant="info" size="sm">{stats.totalBookings}</Badge>
+                  )}
+                  {tab.id === 'users' && stats.totalUsers > 0 && (
+                    <Badge variant="info" size="sm">{stats.totalUsers}</Badge>
+                  )}
                 </button>
               ))}
             </nav>
@@ -345,16 +457,162 @@ export default function AdminDashboard() {
 
           {activeTab === 'users' && (
             <Card>
-              <h3 className="font-semibold text-[var(--color-text)] mb-4">User Management</h3>
-              <div className="text-center py-12 text-[var(--color-text-muted)]">
-                User management features coming soon...
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-[var(--color-text)]">User Management</h3>
+                <Badge variant="info">{allUsers.length} Users</Badge>
               </div>
+              {allUsers.length === 0 ? (
+                <EmptyState type="no-data" title="No registered users" description="Users will appear here once they sign up" />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 text-sm font-medium text-[var(--color-text-muted)]">User</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-[var(--color-text-muted)]">Email</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-[var(--color-text-muted)]">Role</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-[var(--color-text-muted)]">Bookings</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-[var(--color-text-muted)]">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allUsers.map((u) => (
+                        <tr key={u.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-3">
+                              <Avatar fallback={u.displayName || 'User'} size="sm" />
+                              <span className="font-medium">{u.displayName || 'Anonymous'}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-[var(--color-text-muted)]">{u.email || 'N/A'}</td>
+                          <td className="py-3 px-4">
+                            <Badge variant={u.role === 'admin' ? 'error' : u.role === 'host' ? 'warning' : 'info'}>
+                              {u.role || 'user'}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="font-semibold">{u.bookings?.length || 0}</span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <Button size="sm" variant="ghost" onClick={() => viewUserDetails(u)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
+          )}
+
+          {activeTab === 'bookings' && (
+            <Card>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-[var(--color-text)]">All Bookings</h3>
+                <div className="flex gap-2">
+                  {[
+                    { id: 'all', label: 'All' },
+                    { id: 'vehicles', label: 'Vehicles' },
+                    { id: 'hotels', label: 'Hotels' },
+                    { id: 'experiences', label: 'Experiences' },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveBookingsTab(tab.id as any)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        activeBookingsTab === tab.id
+                          ? 'bg-[var(--color-primary)] text-white'
+                          : 'bg-gray-100 text-[var(--color-text-muted)] hover:bg-gray-200'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {filteredBookings.length === 0 ? (
+                <EmptyState type="no-data" title="No bookings found" description="Bookings will appear here when users make them" />
+              ) : (
+                <div className="space-y-3">
+                  {filteredBookings.map((booking) => (
+                    <div key={booking.id} className="flex items-center gap-4 p-4 border border-gray-100 rounded-lg">
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#FF5722] to-[#FF8A65] flex items-center justify-center text-white">
+                        {getBookingTypeIcon(booking.type)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold">{booking.title}</div>
+                        <div className="text-sm text-[var(--color-text-muted)]">
+                          {booking.location} • {formatDate(booking.date)} • ID: {booking.id}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-[var(--color-primary)]">{formatCurrency(booking.total)}</div>
+                        {getStatusBadge(booking.status)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Card>
           )}
         </div>
       </main>
 
       <Footer />
+
+      {/* User Details Modal */}
+      {showUserModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-auto">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold">{selectedUser.displayName || 'User'}</h2>
+                <p className="text-sm text-[var(--color-text-muted)]">{selectedUser.email}</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowUserModal(false)}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="p-6">
+              <div className="mb-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <Avatar fallback={selectedUser.displayName || 'User'} size="lg" />
+                  <div>
+                    <Badge variant={selectedUser.role === 'admin' ? 'error' : selectedUser.role === 'host' ? 'warning' : 'info'}>
+                      {selectedUser.role || 'user'}
+                    </Badge>
+                    <p className="text-sm text-[var(--color-text-muted)] mt-1">Member since {formatDate(new Date().toLocaleDateString())}</p>
+                  </div>
+                </div>
+              </div>
+              <h3 className="font-semibold mb-4">Booking History ({selectedUser.bookings?.length || 0})</h3>
+              {selectedUser.bookings && selectedUser.bookings.length > 0 ? (
+                <div className="space-y-3">
+                  {selectedUser.bookings.map((booking) => (
+                    <div key={booking.id} className="p-3 border border-gray-100 rounded-lg">
+                      <div className="flex items-center gap-3 mb-2">
+                        {getTypeIcon(booking.type)}
+                        <span className="font-medium">{booking.title}</span>
+                        {getStatusBadge(booking.status)}
+                      </div>
+                      <div className="text-sm text-[var(--color-text-muted)]">
+                        {booking.location} • {formatDate(booking.date)}
+                      </div>
+                      <div className="text-sm font-semibold text-[var(--color-primary)] mt-1">
+                        {formatCurrency(booking.total)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center py-8 text-[var(--color-text-muted)]">No bookings yet</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
